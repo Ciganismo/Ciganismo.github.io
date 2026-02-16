@@ -3,169 +3,83 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SpyGame Hub | Статистика</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&display=swap" rel="stylesheet">
+    <title>GameHub | Меню</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
     <style>
-        :root { --spy: #f97316; --bg: #0f172a; --card: #1e293b; --text: #f8fafc; }
-        body { 
-            font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); 
-            margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; 
+        :root { --p: #6366f1; --bg: #0f172a; --card: #1e293b; --text: #f8fafc; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding-bottom: 80px; }
+        .container { padding: 20px; max-width: 600px; margin: 0 auto; }
+        .game-card {
+            background: var(--card); border-radius: 20px; padding: 20px; margin-bottom: 15px;
+            border: 1px solid rgba(255,255,255,0.05); display: flex; justify-content: space-between; align-items: center;
+            text-decoration: none; color: white; transition: 0.3s;
         }
-        .container { width: 100%; max-width: 600px; }
-        
-        /* Header */
-        header { text-align: center; margin-bottom: 30px; }
-        header h1 { font-size: 40px; font-weight: 900; margin: 0; letter-spacing: -1px; }
-        header span { color: var(--spy); }
-
-        /* Banner */
-        .play-banner { 
-            background: linear-gradient(135deg, #f97316, #ea580c); 
-            padding: 25px; border-radius: 24px; text-align: center; margin-bottom: 30px;
-            box-shadow: 0 10px 30px rgba(249, 115, 22, 0.3);
-        }
-        .play-banner h2 { margin: 0 0 15px 0; font-weight: 800; }
-        .btn-play { 
-            background: white; color: var(--spy); padding: 12px 30px; 
-            border-radius: 12px; text-decoration: none; font-weight: 800; display: inline-block;
-            transition: 0.3s;
-        }
-        .btn-play:hover { transform: scale(1.05); }
-
-        /* Leaderboard */
-        .card { 
-            background: var(--card); border-radius: 24px; padding: 20px; 
-            border: 1px solid rgba(255,255,255,0.05); box-shadow: 0 4px 20px rgba(0,0,0,0.2); 
-        }
-        table { width: 100%; border-collapse: collapse; }
-        th { text-align: left; color: #94a3b8; font-size: 12px; text-transform: uppercase; padding: 15px 10px; }
-        td { padding: 15px 10px; border-top: 1px solid rgba(255,255,255,0.05); }
-        .rank { font-weight: 900; color: var(--spy); width: 30px; }
-        .name { font-weight: 600; }
-        .pts { font-weight: 800; text-align: right; }
-        .games { color: #94a3b8; font-size: 13px; text-align: center; }
-
-        /* Admin Section */
-        footer { margin-top: 40px; text-align: center; }
-        #admin-link { 
-            display: none; background: #6366f1; color: white; padding: 10px 20px; 
-            border-radius: 10px; text-decoration: none; font-weight: 700; margin-bottom: 10px;
-        }
-        .auth-small { background: none; border: none; color: #334155; font-size: 11px; cursor: pointer; }
+        .game-card:hover { transform: translateY(-3px); background: #2d3a4f; }
+        .user-profile { display: flex; align-items: center; gap: 10px; margin-bottom: 30px; background: #1e293b; padding: 10px; border-radius: 50px; }
+        .user-profile img { width: 40px; border-radius: 50%; }
+        nav { position: fixed; bottom: 0; left: 0; right: 0; background: #1e293b; display: flex; justify-content: space-around; padding: 15px; border-top: 1px solid #334155; }
+        nav a { color: #64748b; text-decoration: none; font-size: 12px; text-align: center; }
+        nav a.active { color: var(--p); }
     </style>
 </head>
 <body>
+    <div class="container">
+        <div id="auth-section" class="user-profile">
+            <button onclick="login()" id="login-btn">Войти через Google</button>
+        </div>
 
-<div class="container">
-    <header>
-        <h1>SPY<span>FALL</span></h1>
-        <p style="color: #94a3b8; margin: 5px 0 0 0;">Рейтинг лучших агентов</p>
-    </header>
+        <h1>Выберите <span>Игру</span></h1>
 
-    <div class="play-banner">
-        <h2>Готовы к игре?</h2>
-        <a href="spy_game.html" class="btn-play">ЗАПУСТИТЬ МОДУЛЬ</a>
+        <a href="spy_game.html" class="game-card">
+            <div>
+                <h3 style="margin:0">🕵️ Шпион</h3>
+                <small style="color:#94a3b8">Поиск предателя</small>
+            </div>
+            <span>→</span>
+        </a>
+
+        <a href="other_game.html" class="game-card">
+            <div>
+                <h3 style="margin:0">🃏 Другая игра</h3>
+                <small style="color:#94a3b8">Статистика для карт/настолок</small>
+            </div>
+            <span>→</span>
+        </a>
+
+        <div id="leaderboard-section">
+            <h2>🏆 Топ игроков</h2>
+            <div class="game-card" style="display:block" id="stats-list">Войдите, чтобы увидеть статистику</div>
+        </div>
     </div>
 
-    <div class="card">
-        <table>
-            <thead>
-                <tr>
-                    <th>№</th>
-                    <th>Агент</th>
-                    <th style="text-align: center;">Игр</th>
-                    <th style="text-align: right;">Очки</th>
-                </tr>
-            </thead>
-            <tbody id="leaderboard-body">
-                </tbody>
-        </table>
-    </div>
+    <nav>
+        <a href="index.html" class="active">🏠<br>Меню</a>
+        <a href="chat.html">💬<br>Чат</a>
+        <a href="admin.html">⚙️<br>Настройки</a>
+    </nav>
 
-    <footer>
-        <a href="admin.html" id="admin-link">⚙️ Панель Администратора</a><br>
-        <button class="auth-small" id="auth-trigger" onclick="handleAuth()">Admin Login</button>
-    </footer>
-</div>
+    <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
+    <script>
+        const firebaseConfig = { /* ВАШ КОНФИГ */ };
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.database();
 
-<script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
+        function login() { auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()); }
 
-<script>
-    const firebaseConfig = {
-        apiKey: "AIzaSyC77DjtldFSm-3VIWXQrHsCYL3hzjdUU-8",
-        authDomain: "tabliz-baf06.firebaseapp.com",
-        databaseURL: "https://tabliz-baf06-default-rtdb.firebaseio.com",
-        projectId: "tabliz-baf06",
-        appId: "1:42955040155:web:f23b7cf6b27b6917c2ad3e"
-    };
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.database();
-    const auth = firebase.auth();
-
-    // 1. ЗАГРУЗКА И РАСЧЕТ ДАННЫХ
-    db.ref('/spy').on('value', snap => {
-        const data = snap.val() || { teams: [], matches: [] };
-        const players = data.teams || [];
-        const matches = data.matches || [];
-
-        // Обнуляем счетчики перед расчетом
-        const stats = players.map(p => ({ name: p.name, pts: 0, games: 0 }));
-
-        matches.forEach(m => {
-            stats.forEach(p => p.games++); // Каждая игра в базе +1 к счетчику всех
-            
-            const spyIdx = stats.findIndex(p => p.name === m.spy);
-            if (spyIdx !== -1) {
-                if (m.res === 'win') {
-                    // Шпион выиграл (2 очка)
-                    stats[spyIdx].pts += 2;
-                } else {
-                    // Шпион проиграл (Жители выиграли по 1 очку)
-                    stats.forEach((p, idx) => {
-                        if (idx !== spyIdx) p.pts += 1;
-                    });
-                }
+        auth.onAuthStateChanged(user => {
+            if (user) {
+                document.getElementById('auth-section').innerHTML = `<img src="${user.photoURL}"> <span>${user.displayName}</span>`;
+                loadGlobalStats();
             }
         });
 
-        // Сортировка по очкам
-        stats.sort((a, b) => b.pts - a.pts);
-
-        // Рендер таблицы
-        const body = document.getElementById('leaderboard-body');
-        body.innerHTML = stats.map((p, i) => `
-            <tr>
-                <td class="rank">${i + 1}</td>
-                <td class="name">${p.name}</td>
-                <td class="games">${p.games}</td>
-                <td class="pts">${p.pts}</td>
-            </tr>
-        `).join('');
-    });
-
-    // 2. ЛОГИКА АДМИНКИ (СКРЫТАЯ)
-    auth.onAuthStateChanged(user => {
-        const link = document.getElementById('admin-link');
-        const trigger = document.getElementById('auth-trigger');
-        if (user) {
-            link.style.display = 'inline-block';
-            trigger.innerText = 'Logout (' + user.displayName + ')';
-        } else {
-            link.style.display = 'none';
-            trigger.innerText = 'Admin Login';
+        function loadGlobalStats() {
+            // Загрузка статистики из профиля владельца (вашего)
+            // Здесь будет логика отображения вашей таблицы всем авторизованным друзьям
         }
-    });
-
-    async function handleAuth() {
-        if (auth.currentUser) {
-            await auth.signOut();
-        } else {
-            const provider = new firebase.auth.GoogleAuthProvider();
-            await auth.signInWithPopup(provider);
-        }
-    }
-</script>
+    </script>
 </body>
 </html>

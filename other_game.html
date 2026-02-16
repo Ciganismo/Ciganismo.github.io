@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GameHub | Другие игры</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&display=swap" rel="stylesheet">
+    <style>
+        :root { --p: #8b5cf6; --bg: #0f172a; --card: #1e293b; --text: #f8fafc; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding-bottom: 90px; }
+        .container { padding: 20px; max-width: 500px; margin: 0 auto; }
+
+        .card { background: var(--card); border-radius: 24px; padding: 25px; border: 1px solid rgba(255,255,255,0.05); box-shadow: 0 10px 30px rgba(0,0,0,0.3); }
+        h1 { font-weight: 900; margin-bottom: 25px; text-align: center; }
+        h1 span { color: var(--p); }
+
+        label { display: block; margin: 15px 0 8px 5px; font-size: 14px; color: #94a3b8; font-weight: 600; }
+        select, input {
+            width: 100%; padding: 14px; border-radius: 12px; border: 1px solid #334155;
+            background: #0f172a; color: white; font-size: 16px; box-sizing: border-box;
+            font-family: inherit;
+        }
+
+        .btn-save {
+            background: var(--p); color: white; width: 100%; padding: 16px;
+            border-radius: 14px; border: none; font-weight: 800; font-size: 16px;
+            margin-top: 25px; cursor: pointer; transition: 0.3s;
+        }
+        .btn-save:active { transform: scale(0.98); }
+
+        /* Навигация как в index.html */
+        nav { position: fixed; bottom: 0; left: 0; right: 0; background: #1e293b; display: flex; justify-content: space-around; padding: 15px 0; border-top: 1px solid rgba(255,255,255,0.1); backdrop-filter: blur(10px); }
+        nav a { color: #64748b; text-decoration: none; font-size: 11px; text-align: center; display: flex; flex-direction: column; gap: 5px; }
+        nav a.active { color: var(--p); }
+        .nav-icon { font-size: 20px; }
+
+        .history-item {
+            background: rgba(255,255,255,0.02); padding: 12px; border-radius: 10px;
+            margin-top: 10px; display: flex; justify-content: space-between; font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header><h1>ОСТАЛЬНЫЕ <span>ИГРЫ</span></h1></header>
+
+    <div class="card">
+        <label>Во что играли?</label>
+        <select id="game-type">
+            <option value="Карты">🃏 Карты (Дурак/Покер)</option>
+            <option value="Настолка">🎲 Настольная игра</option>
+            <option value="Бильярд">🎱 Бильярд / Дартс</option>
+            <option value="Другое">✨ Другое</option>
+        </select>
+
+        <label>Кто победил?</label>
+        <select id="winner-select">
+            <option value="">Загрузка игроков...</option>
+        </select>
+
+        <label>Очки за победу</label>
+        <input type="number" id="points-val" value="1">
+
+        <button class="btn-save" onclick="saveResult()">ЗАПИСАТЬ ПОБЕДУ</button>
+    </div>
+
+    <div id="recent-results" style="margin-top: 30px;">
+        <h3 style="font-size: 16px; color: #94a3b8;">Последние записи:</h3>
+        </div>
+</div>
+
+<nav>
+    <a href="index.html"><span class="nav-icon">🏆</span>Рейтинг</a>
+    <a href="spy_game.html"><span class="nav-icon">🕵️</span>Шпион</a>
+    <a href="other_game.html" class="active"><span class="nav-icon">🎮</span>Игры</a>
+    <a href="chat.html"><span class="nav-icon">💬</span>Чат</a>
+    <a href="admin.html"><span class="nav-icon">⚙️</span>Админ</a>
+</nav>
+
+<script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
+
+<script>
+    // ИСПОЛЬЗУЙ СВОЙ КОНФИГ ИЗ FIREBASE
+    const firebaseConfig = {
+        apiKey: "AIzaSyC77DjtldFSm-3VIWXQrHsCYL3hzjdUU-8",
+        authDomain: "tabliz-baf06.firebaseapp.com",
+        databaseURL: "https://tabliz-baf06-default-rtdb.firebaseio.com",
+        projectId: "tabliz-baf06",
+        appId: "1:42955040155:web:f23b7cf6b27b6917c2ad3e"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+    const auth = firebase.auth();
+
+    // 1. Загрузка списка игроков из общей базы (из админки)
+    db.ref('/spy/teams').on('value', snap => {
+        const players = snap.val() || [];
+        const select = document.getElementById('winner-select');
+        select.innerHTML = players.map(p => `<option value="${p.name}">${p.name}</option>).join('');
+    });
+
+    // 2. Отображение последних результатов
+    db.ref('/other_games/matches').limitToLast(3).on('value', snap => {
+        const matches = snap.val() || {};
+        const container = document.getElementById('recent-results');
+        let html = '';
+        Object.values(matches).reverse().forEach(m => {
+            html += `
+                <div class="history-item">
+                    <span><b>${m.winner}</b> (${m.type})</span>
+                    <span style="color:var(--p)">+${m.pts} XP</span>
+                </div>`;
+        });
+        container.innerHTML = '<h3 style="font-size: 16px; color: #94a3b8;">Последние записи:</h3>' + html;
+    });
+
+    // 3. Сохранение результата (только для админа)
+    async function saveResult() {
+        const user = auth.currentUser;
+        if (!user) {
+            alert("Только админ может записывать результаты! Войди в разделе 'Админ'.");
+            return;
+        }
+
+        const winner = document.getElementById('winner-select').value;
+        const type = document.getElementById('game-type').value;
+        const pts = parseInt(document.getElementById('points-val').value);
+
+        if(!winner) return;
+
+        try {
+            // Сохраняем в отдельную ветку для других игр
+            await db.ref('/other_games/matches').push({
+                winner: winner,
+                type: type,
+                pts: pts,
+                date: new Date().toISOString()
+            });
+            alert("Результат сохранен!");
+        } catch (e) {
+            alert("Ошибка доступа. Проверь права в Firebase.");
+        }
+    }
+</script>
+</body>
+</html>
