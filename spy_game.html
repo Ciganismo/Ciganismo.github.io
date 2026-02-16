@@ -3,51 +3,77 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🕵️ Шпион: Game Engine</title>
+    <title>🕵️ Шпион: Игровой модуль</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
     <style>
-        :root { --spy: #f97316; --bg: #18181b; --card: #27272a; --text: #f4f4f5; }
+        :root { --spy: #f97316; --bg: #0f172a; --card: #1e293b; --text: #f8fafc; }
         body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); margin: 0; display: flex; flex-direction: column; align-items: center; min-height: 100vh; }
-        .container { width: 95%; max-width: 500px; padding: 20px; text-align: center; }
-        .card { background: var(--card); padding: 30px; border-radius: 24px; border: 1px solid rgba(255,255,255,0.05); box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
-        .btn { border: none; padding: 16px; border-radius: 14px; cursor: pointer; font-weight: 700; width: 100%; margin-top: 10px; font-size: 16px; }
+        
+        .container { width: 90%; max-width: 500px; padding: 20px; text-align: center; }
+        .card { background: var(--card); padding: 30px; border-radius: 24px; border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 20px 50px rgba(0,0,0,0.5); }
+        
+        .btn { border: none; padding: 16px; border-radius: 12px; cursor: pointer; font-weight: 700; width: 100%; font-size: 16px; transition: 0.2s; margin-top: 10px; font-family: inherit; }
         .btn-spy { background: var(--spy); color: white; }
-        .role-box { height: 140px; display: flex; align-items: center; justify-content: center; background: var(--spy); border-radius: 18px; margin: 20px 0; font-size: 24px; font-weight: 900; user-select: none; cursor: pointer; border: 3px dashed rgba(255,255,255,0.2); }
-        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 20px; }
-        .v-item { background: rgba(255,255,255,0.05); padding: 15px; border-radius: 12px; cursor: pointer; }
+        .btn-outline { background: rgba(255,255,255,0.1); color: white; border: 1px solid rgba(255,255,255,0.2); }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        .role-box { height: 160px; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #f97316, #ea580c); border-radius: 20px; margin: 25px 0; font-size: 26px; font-weight: 900; user-select: none; cursor: pointer; border: 4px dashed rgba(255,255,255,0.3); }
+        
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 20px; }
+        .v-item { background: rgba(255,255,255,0.05); padding: 15px; border-radius: 12px; cursor: pointer; border: 2px solid transparent; transition: 0.2s; }
+        .v-item:active { background: var(--spy); transform: scale(0.95); }
+        
         .hidden { display: none; }
+        .status-bar { font-size: 12px; color: #94a3b8; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
+        #timer { font-size: 54px; font-weight: 900; color: var(--spy); margin: 20px 0; font-variant-numeric: tabular-nums; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h1 style="color:var(--spy)">SPYFALL</h1>
-
-    <div id="setup" class="card">
-        <h3>Подготовка</h3>
-        <p id="p-count">Загрузка игроков...</p>
-        <button class="btn btn-spy" onclick="start()">РАЗДАТЬ РОЛИ</button>
+    <div class="status-bar">
+        <span id="auth-status">Команда: Не в сети</span>
+        <span id="player-count">Игроков: 0</span>
     </div>
 
-    <div id="roles" class="card hidden">
-        <h2 id="cur-name">Игрок</h2>
-        <div class="role-box" onmousedown="showR()" onmouseup="hideR()" ontouchstart="showR()" ontouchend="hideR()">ЗАЖМИ МЕНЯ</div>
-        <button id="next-btn" class="btn hidden" style="background:#3f3f46; color:white" onclick="next()">СЛЕДУЮЩИЙ</button>
+    <div id="sc-setup" class="card">
+        <h1 style="color:var(--spy); margin-top:0">SPYFALL</h1>
+        <p>Для записи результатов в таблицу нужно авторизовать члена команды.</p>
+        <button id="login-btn" class="btn btn-outline" onclick="handleAuth()">🔐 Войти (Google)</button>
+        <hr style="margin: 20px 0; opacity: 0.1">
+        <button class="btn btn-spy" onclick="startGame()">НАЧАТЬ РАСПРЕДЕЛЕНИЕ</button>
+        <button class="btn btn-outline" onclick="window.location.href='index.html'">← Назад</button>
     </div>
 
-    <div id="vote" class="card hidden">
-        <h3 id="voter-name">Кто голосует?</h3>
+    <div id="sc-roles" class="card hidden">
+        <h2 id="cur-player">Игрок...</h2>
+        <p style="opacity: 0.7; font-size: 14px">Зажми и удерживай блок, чтобы узнать роль. Отпусти и передай телефон.</p>
+        <div class="role-box" onmousedown="showRole()" onmouseup="hideRole()" ontouchstart="showRole()" ontouchend="hideRole()">УДЕРЖИВАТЬ</div>
+        <button id="btn-next-p" class="btn btn-spy hidden" onclick="nextPlayer()">СЛЕДУЮЩИЙ ИГРОК</button>
+    </div>
+
+    <div id="sc-timer" class="card hidden">
+        <h3>Обсуждение</h3>
+        <div id="timer">05:00</div>
+        <button class="btn btn-spy" onclick="goToVote()">К ГОЛОСОВАНИЮ</button>
+    </div>
+
+    <div id="sc-vote" class="card hidden">
+        <h3 id="voter-name">Голосует: ...</h3>
+        <p style="opacity:0.7; font-size:13px">Твой выбор будет скрыт от остальных.</p>
         <div id="vote-grid" class="grid"></div>
     </div>
 
-    <div id="results" class="card hidden">
-        <h2 id="res-title">Итог</h2>
-        <div id="res-detail" style="margin-bottom:20px"></div>
-        <button id="save-btn" class="btn btn-spy" onclick="saveAndExit()">ЗАПИСАТЬ И ВЫЙТИ</button>
+    <div id="sc-results" class="card hidden">
+        <h1 id="res-title" style="margin-top:0">ИТОГИ</h1>
+        <div id="res-body" style="margin-bottom: 25px; line-height: 1.6;"></div>
+        <button id="save-btn" class="btn btn-spy" onclick="saveToFirebase()">ЗАПИСАТЬ В ТАБЛИЦУ</button>
+        <button class="btn btn-outline" onclick="window.location.href='index.html'">ВЫЙТИ БЕЗ ЗАПИСИ</button>
     </div>
 </div>
 
 <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
 
 <script>
@@ -56,95 +82,175 @@
         authDomain: "tabliz-baf06.firebaseapp.com",
         databaseURL: "https://tabliz-baf06-default-rtdb.firebaseio.com",
         projectId: "tabliz-baf06",
-        storageBucket: "tabliz-baf06.firebasestorage.app",
-        messagingSenderId: "42955040155",
-        appId: "1:42955040155:web:f23b7cf6b27b6917c2ad3e",
+        appId: "1:42955040155:web:f23b7cf6b27b6917c2ad3e"
     };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
+    const auth = firebase.auth();
 
-    const locs = ["Банк", "Отель", "Театр", "Подводная лодка", "Школа", "Ресторан", "Самолет"];
-    let players = [];
-    let game = { spy: '', loc: '', idx: 0, votes: {} };
+    const locations = ["Банк", "Отель", "Казино", "Самолет", "Цирк", "Пиратский корабль", "Полярная станция", "Луна", "Джунгли"];
+    let state = {
+        players: [],
+        spy: '',
+        loc: '',
+        idx: 0,
+        votes: {},
+        finalRes: ''
+    };
 
-    db.ref('/spy/teams').once('value', s => {
-        players = (s.val() || []).map(t => t.name);
-        document.getElementById('p-count').innerText = "Игроков: " + players.length;
+    // 1. Проверка авторизации
+    auth.onAuthStateChanged(user => {
+        const status = document.getElementById('auth-status');
+        const loginBtn = document.getElementById('login-btn');
+        if (user) {
+            status.innerText = "Команда: " + user.displayName;
+            status.style.color = "#10b981";
+            loginBtn.innerText = "Выйти из аккаунта";
+        } else {
+            status.innerText = "Команда: Не в сети";
+            status.style.color = "#ef4444";
+            loginBtn.innerText = "🔐 Войти (Google)";
+        }
     });
 
-    function start() {
-        if(players.length < 3) return alert("Нужно 3+ игрока!");
-        game.spy = players[Math.floor(Math.random()*players.length)];
-        game.loc = locs[Math.floor(Math.random()*locs.length)];
-        show('roles');
-        updateR();
+    async function handleAuth() {
+        if(auth.currentUser) await auth.signOut();
+        else await auth.signInWithPopup(new firebase.auth.GoogleAuthProvider());
     }
 
-    function updateR() {
-        document.getElementById('cur-name').innerText = players[game.idx];
-        document.getElementById('next-btn').classList.add('hidden');
+    // 2. Загрузка игроков
+    db.ref('/spy/teams').once('value', s => {
+        state.players = (s.val() || []).map(t => t.name);
+        document.getElementById('player-count').innerText = "Игроков: " + state.players.length;
+    });
+
+    // 3. Логика распределения ролей
+    function startGame() {
+        if(state.players.length < 3) return alert("Мало игроков! Добавь их в главном меню.");
+        state.spy = state.players[Math.floor(Math.random() * state.players.length)];
+        state.loc = locations[Math.floor(Math.random() * locations.length)];
+        state.idx = 0;
+        switchScreen('sc-roles');
+        updateRoleScreen();
     }
 
-    function showR() {
-        const b = document.querySelector('.role-box');
-        b.innerText = players[game.idx] === game.spy ? "ТЫ ШПИОН! 🕵️" : game.loc;
-        document.getElementById('next-btn').classList.remove('hidden');
+    function updateRoleScreen() {
+        document.getElementById('cur-player').innerText = "Очередь: " + state.players[state.idx];
+        document.getElementById('btn-next-p').classList.add('hidden');
     }
 
-    function hideR() { document.querySelector('.role-box').innerText = "ЗАЖМИ МЕНЯ"; }
-
-    function next() {
-        game.idx++;
-        if(game.idx >= players.length) { game.idx = 0; show('vote'); updateV(); }
-        else { updateR(); hideR(); }
+    function showRole() {
+        const box = document.querySelector('.role-box');
+        const p = state.players[state.idx];
+        box.innerText = (p === state.spy) ? "ТЫ ШПИОН! 🕵️" : state.loc;
+        box.style.background = "#ea580c";
+        document.getElementById('btn-next-p').classList.remove('hidden');
     }
 
-    function updateV() {
-        document.getElementById('voter-name').innerText = "Голосует: " + players[game.idx];
-        document.getElementById('vote-grid').innerHTML = players.map(p => `
-            <div class="v-item" onclick="voteFor('${p}')">${p}</div>
-        `).join('');
+    function hideRole() {
+        const box = document.querySelector('.role-box');
+        box.innerText = "УДЕРЖИВАТЬ";
+        box.style.background = "linear-gradient(135deg, #f97316, #ea580c)";
     }
 
-    function voteFor(p) {
-        game.votes[players[game.idx]] = p;
-        game.idx++;
-        if(game.idx >= players.length) finalize();
-        else { alert("Принято! Передай телефон: " + players[game.idx]); updateV(); }
-    }
-
-    function finalize() {
-        show('results');
-        const counts = {};
-        Object.values(game.votes).forEach(v => counts[v] = (counts[v] || 0) + 1);
-        let max = 0, target = '';
-        for(let p in counts) { if(counts[p] > max) { max = counts[p]; target = p; } }
-
-        const isWin = (target === game.spy);
-        document.getElementById('res-title').innerText = isWin ? "ЖИТЕЛИ ПОБЕДИЛИ!" : "ШПИОН ПОБЕДИЛ!";
-        document.getElementById('res-detail').innerHTML = `Шпионом был: <b>${game.spy}</b><br>Изгнали: <b>${target}</b>`;
-        game.result = isWin ? 'lose' : 'win'; 
-    }
-
-    async function saveAndExit() {
-        const btn = document.getElementById('save-btn');
-        btn.innerText = "Сохранение...";
-        btn.disabled = true;
-
-        try {
-            const s = await db.ref('/spy/matches').get();
-            let ms = s.val() || [];
-            ms.push({ spy: game.spy, res: game.result, loc: game.loc, date: new Date().toISOString() });
-            await db.ref('/spy/matches').set(ms);
-            window.location.href = "index.html";
-        } catch(e) {
-            alert("Ошибка базы!");
-            btn.disabled = false;
-            btn.innerText = "ЗАПИСАТЬ И ВЫЙТИ";
+    function nextPlayer() {
+        state.idx++;
+        if(state.idx >= state.players.length) {
+            switchScreen('sc-timer');
+            startTimer(300);
+        } else {
+            updateRoleScreen();
+            hideRole();
         }
     }
 
-    function show(id) {
+    // 4. Таймер
+    function startTimer(sec) {
+        const el = document.getElementById('timer');
+        const interval = setInterval(() => {
+            let m = Math.floor(sec / 60);
+            let s = sec % 60;
+            el.innerText = `${m}:${s < 10 ? '0' : ''}${s}`;
+            if (sec <= 0 || document.getElementById('sc-timer').classList.contains('hidden')) clearInterval(interval);
+            sec--;
+        }, 1000);
+    }
+
+    // 5. Голосование
+    function goToVote() {
+        state.idx = 0;
+        state.votes = {};
+        switchScreen('sc-vote');
+        updateVoteScreen();
+    }
+
+    function updateVoteScreen() {
+        document.getElementById('voter-name').innerText = "Голосует: " + state.players[state.idx];
+        const grid = document.getElementById('vote-grid');
+        grid.innerHTML = state.players.map(p => `
+            <div class="v-item" onclick="confirmVote('${p}')">${p}</div>
+        `).join('');
+    }
+
+    function confirmVote(target) {
+        state.votes[state.players[state.idx]] = target;
+        state.idx++;
+        if(state.idx >= state.players.length) {
+            calculateResults();
+        } else {
+            alert("Голос принят. Передай телефон игроку: " + state.players[state.idx]);
+            updateVoteScreen();
+        }
+    }
+
+    // 6. Итоги
+    function calculateResults() {
+        switchScreen('sc-results');
+        const counts = {};
+        Object.values(state.votes).forEach(v => counts[v] = (counts[v] || 0) + 1);
+        
+        let max = 0; let accused = "Никто";
+        for(let p in counts) { if(counts[p] > max) { max = counts[p]; accused = p; } }
+
+        const win = (accused === state.spy);
+        state.finalRes = win ? 'lose' : 'win'; // шпион 'lose' = жители победили
+
+        document.getElementById('res-title').innerText = win ? "ЖИТЕЛИ ПОБЕДИЛИ! 🏆" : "ШПИОН ПОБЕДИЛ! 🕵️";
+        let log = `<b>Шпионом был:</b> ${state.spy}<br><b>Локация:</b> ${state.loc}<br><br><b>Изгнали:</b> ${accused}<br><br><b>Голоса:</b><br>`;
+        for(let v in state.votes) log += `<small>${v} → ${state.votes[v]}</small><br>`;
+        document.getElementById('res-body').innerHTML = log;
+    }
+
+    // 7. Сохранение (С ПРОВЕРКОЙ ПРАВ)
+    async function saveToFirebase() {
+        if(!auth.currentUser) {
+            alert("Только авторизованные участники команды могут записывать данные. Войдите в аккаунт.");
+            return;
+        }
+
+        const btn = document.getElementById('save-btn');
+        btn.innerText = "СОХРАНЯЕМ...";
+        btn.disabled = true;
+
+        try {
+            const snap = await db.ref('/spy/matches').get();
+            let matches = snap.val() || [];
+            matches.push({
+                spy: state.spy,
+                res: state.finalRes,
+                loc: state.loc,
+                date: new Date().toISOString()
+            });
+            await db.ref('/spy/matches').set(matches);
+            window.location.href = "index.html";
+        } catch(e) {
+            alert("Ошибка записи! Проверь права доступа в Firebase (Rules).");
+            btn.disabled = false;
+            btn.innerText = "ЗАПИСАТЬ В ТАБЛИЦУ";
+        }
+    }
+
+    function switchScreen(id) {
         document.querySelectorAll('.card').forEach(c => c.classList.add('hidden'));
         document.getElementById(id).classList.remove('hidden');
     }
