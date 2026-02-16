@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>🏆 Tournament Pro: Final Edition</title>
+    <style>
+        :root { --p: #2563eb; --s: #16a34a; --d: #dc2626; --dark: #1e293b; --bg: #f1f5f9; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; padding-bottom: 50px; display: flex; flex-direction: column; align-items: center; }
+        .admin-header { width: 100%; background: var(--dark); color: white; padding: 15px 0; margin-bottom: 20px; }
+        .admin-content { max-width: 1000px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; padding: 0 20px; }
+        .card { background: white; padding: 2rem; border-radius: 12px; box-shadow: 0 10px 15px rgba(0,0,0,0.05); width: 90%; max-width: 1000px; margin-top: 20px; }
+        .toolbar { display: none; background: #f8fafc; padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #e2e8f0; flex-direction: column; gap: 15px; }
+        .toolbar.active { display: flex; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th { background: #f8fafc; color: #64748b; padding: 12px; font-size: 0.8rem; text-transform: uppercase; border-bottom: 2px solid #e2e8f0; }
+        td { padding: 12px; border-bottom: 1px solid #f1f5f9; text-align: center; }
+        .match-input { display: flex; gap: 10px; align-items: center; background: white; padding: 10px; border-radius: 6px; box-shadow: inset 0 2px 4px rgba(0,0,0,0.05); }
+        .match-input input { padding: 8px; border: 1px solid #ddd; border-radius: 4px; width: 60px; text-align: center; }
+        .match-input select { padding: 8px; border: 1px solid #ddd; border-radius: 4px; flex: 1; }
+        .btn { border: none; padding: 10px 18px; border-radius: 6px; cursor: pointer; font-weight: 600; display: flex; align-items: center; gap: 8px; transition: 0.2s; }
+        .btn:hover { opacity: 0.9; }
+        .btn-mode { background: #475569; color: white; }
+        .btn-mode.active { background: var(--d); }
+        .btn-save { background: var(--s); color: white; width: fit-content; }
+        .history-item { display: flex; justify-content: space-between; padding: 10px; border-bottom: 1px solid #eee; font-size: 0.95rem; align-items: center; }
+        .del-match { background: none; border: none; color: var(--d); cursor: pointer; font-weight: bold; font-size: 1.2rem; }
+        #authStatus { font-size: 0.8rem; color: #94a3b8; margin-top: 4px; }
+    </style>
+</head>
+<body>
+
+<div class="admin-header">
+    <div class="admin-content">
+        <div>
+            <strong>🏆 Tournament Pro</strong>
+            <div id="authStatus">Режим просмотра</div>
+        </div>
+        <button id="modeBtn" class="btn btn-mode" onclick="handleAuthClick()">🔒 Войти</button>
+    </div>
+</div>
+
+<div class="card">
+    <div class="toolbar" id="toolbar">
+        <h3>Админ-панель</h3>
+        <div class="match-input">
+            <select id="team1Select"></select>
+            <input type="number" id="score1" value="0" min="0">
+            <span>:</span>
+            <input type="number" id="score2" value="0" min="0">
+            <select id="team2Select"></select>
+            <button class="btn btn-save" onclick="addMatch()">Добавить матч</button>
+        </div>
+        <hr width="100%" style="border: 0; border-top: 1px solid #eee;">
+        <div style="display:flex; gap:10px;">
+            <button class="btn" style="background:#f1f5f9; color: #1e293b" onclick="addNewTeam()">➕ Новая команда</button>
+            <button class="btn btn-save" style="flex-grow: 1; justify-content: center;" onclick="saveToCloud()">💾 СОХРАНИТЬ В ОБЛАКО</button>
+        </div>
+    </div>
+
+    <h2>Турнирная таблица</h2>
+    <table id="mainTable">
+        <thead>
+            <tr>
+                <th>№</th>
+                <th style="text-align:left">Команда</th>
+                <th>И</th><th>В</th><th>Н</th><th>П</th><th>Очки</th>
+            </tr>
+        </thead>
+        <tbody id="tableBody"></tbody>
+    </table>
+</div>
+
+<div class="card">
+    <h3>История последних матчей</h3>
+    <div id="matchHistory"></div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
+
+<script>
+    // === ТВОИ РЕАЛЬНЫЕ ДАННЫЕ ИЗ СКРИНШОТОВ ===
+    const firebaseConfig = {
+        apiKey: "AIzaSyC77DjtlDFSm-3VIWXQrHsCYL3hzjdUU-8",
+        authDomain: "tabliz-baf06.firebaseapp.com",
+        databaseURL: "https://tabliz-baf06-default-rtdb.firebaseio.com",
+        projectId: "tabliz-baf06",
+        storageBucket: "tabliz-baf06.firebasestorage.app",
+        messagingSenderId: "42955040155",
+        appId: "1:42955040155:web:f23b7cf6b27b6917c2ad3e",
+        measurementId: "G-LF1EL0QWP2"
+    };
+
+    // Инициализация
+    firebase.initializeApp(firebaseConfig);
+    const database = firebase.database();
+    const auth = firebase.auth();
+
+    let state = { teams: [], matches: [] };
+    let isEditMode = false;
+
+    // Следим за входом/выходом
+    auth.onAuthStateChanged(user => {
+        const toolbar = document.getElementById('toolbar');
+        const modeBtn = document.getElementById('modeBtn');
+        const status = document.getElementById('authStatus');
+
+        if (user) {
+            isEditMode = true;
+            toolbar.classList.add('active');
+            modeBtn.innerText = "🔓 Выйти";
+            modeBtn.classList.add('active');
+            status.innerText = "Админ: " + user.email;
+        } else {
+            isEditMode = false;
+            toolbar.classList.remove('active');
+            modeBtn.innerText = "🔒 Войти";
+            modeBtn.classList.remove('active');
+            status.innerText = "Режим просмотра";
+        }
+        renderAll();
+    });
+
+    // Загрузка данных в реальном времени
+    database.ref('/').on('value', (snapshot) => {
+        const data = snapshot.val();
+        if (data) {
+            // Исправляем формат, если в базе только массив команд (старая версия)
+            if (Array.isArray(data)) {
+                state.teams = data;
+                state.matches = [];
+            } else {
+                state.teams = data.teams || [];
+                state.matches = data.matches || [];
+            }
+            // Гарантируем, что числа - это числа (исправление данных со скриншота №2)
+            state.teams.forEach(t => {
+                t.g = parseInt(t.g) || 0;
+                t.w = parseInt(t.w) || 0;
+                t.n = parseInt(t.n) || 0;
+                t.p = parseInt(t.p) || 0;
+                t.pts = parseInt(t.pts) || 0;
+            });
+            recalculateTable();
+            renderAll();
+        }
+    });
+
+    async function handleAuthClick() {
+        if (auth.currentUser) {
+            auth.signOut();
+        } else {
+            const email = prompt("Введите Email администратора:");
+            const password = prompt("Введите пароль:");
+            if (email && password) {
+                try {
+                    await auth.signInWithEmailAndPassword(email, password);
+                } catch (e) {
+                    alert("Ошибка входа: " + e.message);
+                }
+            }
+        }
+    }
+
+    function renderAll() {
+        renderTable();
+        renderHistory();
+        updateSelects();
+    }
+
+    function updateSelects() {
+        const s1 = document.getElementById('team1Select');
+        const s2 = document.getElementById('team2Select');
+        if (!s1 || !s2) return;
+        const options = state.teams.map(t => `<option value="${t.name}">${t.name}</option>`).join('');
+        s1.innerHTML = options || '<option disabled>Нет команд</option>';
+        s2.innerHTML = options || '<option disabled>Нет команд</option>';
+    }
+
+    function addMatch() {
+        const t1 = document.getElementById('team1Select').value;
+        const t2 = document.getElementById('team2Select').value;
+        const s1 = parseInt(document.getElementById('score1').value) || 0;
+        const s2 = parseInt(document.getElementById('score2').value) || 0;
+
+        if (!t1 || !t2 || t1 === t2) return alert("Выберите две разные команды!");
+
+        state.matches.push({ t1, t2, s1, s2 });
+        recalculateTable();
+        renderAll();
+    }
+
+    function recalculateTable() {
+        // Обнуляем перед пересчетом
+        state.teams.forEach(t => { t.g = 0; t.w = 0; t.n = 0; t.p = 0; t.pts = 0; });
+
+        state.matches.forEach(m => {
+            const team1 = state.teams.find(t => t.name === m.t1);
+            const team2 = state.teams.find(t => t.name === m.t2);
+            if (team1 && team2) {
+                team1.g++; team2.g++;
+                if (m.s1 > m.s2) { team1.w++; team1.pts += 3; team2.p++; }
+                else if (m.s1 < m.s2) { team2.w++; team2.pts += 3; team1.p++; }
+                else { team1.n++; team2.n++; team1.pts += 1; team2.pts += 1; }
+            }
+        });
+        state.teams.sort((a, b) => b.pts - a.pts);
+    }
+
+    function renderTable() {
+        const tbody = document.getElementById('tableBody');
+        tbody.innerHTML = state.teams.map((t, i) => `
+            <tr>
+                <td>${i+1}</td>
+                <td style="text-align:left; font-weight:600">${t.name}</td>
+                <td>${t.g}</td><td>${t.w}</td><td>${t.n}</td><td>${t.p}</td>
+                <td style="color:var(--p); font-weight:bold">${t.pts}</td>
+            </tr>
+        `).join('');
+    }
+
+    function renderHistory() {
+        const historyDiv = document.getElementById('matchHistory');
+        historyDiv.innerHTML = state.matches.slice().reverse().map((m, i) => {
+            // Вычисляем оригинальный индекс для удаления
+            const realIdx = state.matches.length - 1 - i;
+            return `
+                <div class="history-item">
+                    <span>${m.t1} <b>${m.s1} : ${m.s2}</b> ${m.t2}</span>
+                    ${isEditMode ? `<button class="del-match" onclick="deleteMatch(${realIdx})">🗑️</button>` : ''}
+                </div>
+            `;
+        }).join('');
+    }
+
+    function addNewTeam() {
+        const name = prompt("Название новой команды:");
+        if (name && !state.teams.find(t => t.name === name)) {
+            state.teams.push({ name, g: 0, w: 0, n: 0, p: 0, pts: 0 });
+            renderAll();
+        }
+    }
+
+    function deleteMatch(index) {
+        if(confirm("Удалить этот матч?")) {
+            state.matches.splice(index, 1);
+            recalculateTable();
+            renderAll();
+        }
+    }
+
+    async function saveToCloud() {
+        if (!auth.currentUser) return alert("Нужна авторизация!");
+        try {
+            // Сохраняем весь объект state (команды + матчи)
+            await database.ref('/').set(state);
+            alert("✅ Успешно сохранено!");
+        } catch (e) {
+            alert("Ошибка сохранения: " + e.message);
+        }
+    }
+</script>
+</body>
+</html>
