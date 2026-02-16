@@ -2,20 +2,23 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>🏆 Tournament Pro: Multi-Sport</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tournament Pro: Ultimate Edition</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
     <style>
         :root {
-            /* Дефолтная тема (Футбол) */
+            /* Тема Футбол (по умолчанию) */
             --primary: #2563eb;
             --accent: #3b82f6;
             --bg-deep: #0f172a;
             --bg-card: #1e293b;
             --text: #f8fafc;
             --success: #10b981;
+            --danger: #ef4444;
         }
 
-        /* Тема для Бильярда */
         body.billiard-theme {
+            /* Тема Бильярд */
             --primary: #059669;
             --accent: #fde047;
             --bg-deep: #022c22;
@@ -27,23 +30,26 @@
         body {
             font-family: 'Inter', sans-serif;
             background-color: var(--bg-deep);
+            background-image: radial-gradient(rgba(255,255,255,0.05) 1px, transparent 1px);
+            background-size: 20px 20px;
             color: var(--text);
             margin: 0;
-            transition: all 0.5s ease;
             display: flex;
             flex-direction: column;
             align-items: center;
             min-height: 100vh;
+            transition: background-color 0.4s ease;
         }
 
         /* МЕНЮ ПЕРЕКЛЮЧЕНИЯ */
         .sport-selector {
             display: flex;
             gap: 10px;
-            margin-top: 20px;
+            margin: 25px 0;
             background: rgba(0,0,0,0.3);
-            padding: 8px;
+            padding: 6px;
             border-radius: 50px;
+            border: 1px solid rgba(255,255,255,0.1);
         }
 
         .sport-btn {
@@ -55,34 +61,124 @@
             background: transparent;
             color: var(--text);
             transition: 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
 
         .sport-btn.active {
             background: var(--primary);
             box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            color: white;
         }
 
-        /* ОСТАЛЬНОЙ ДИЗАЙН */
-        .header { width: 100%; max-width: 1000px; display: flex; justify-content: space-between; align-items: center; padding: 30px 20px; }
-        .card { background: var(--bg-card); border-radius: 24px; padding: 25px; width: 90%; max-width: 1000px; margin-bottom: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
-        
-        table { width: 100%; border-collapse: separate; border-spacing: 0 8px; }
-        th { color: #94a3b8; font-size: 12px; text-transform: uppercase; padding: 10px; }
-        td { background: rgba(255,255,255,0.05); padding: 15px; text-align: center; }
-        td:first-child { border-radius: 12px 0 0 12px; }
-        td:last-child { border-radius: 0 12px 12px 0; }
+        /* ШАПКА */
+        .header {
+            width: 100%;
+            max-width: 1000px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px;
+            box-sizing: border-box;
+        }
 
-        .btn { border: none; padding: 12px 20px; border-radius: 12px; cursor: pointer; font-weight: 700; transition: 0.3s; }
-        .btn-main { background: var(--primary); color: white; }
-        
-        .toolbar { display: none; gap: 10px; align-items: center; margin-bottom: 20px; flex-wrap: wrap; }
+        .logo { display: flex; align-items: center; gap: 12px; font-size: 24px; font-weight: 800; }
+        .logo span { color: var(--primary); }
+
+        /* КАРТОЧКИ */
+        .card {
+            background: var(--bg-card);
+            border-radius: 24px;
+            padding: 25px;
+            width: 95%;
+            max-width: 1000px;
+            margin-bottom: 25px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+            border: 1px solid rgba(255,255,255,0.05);
+            box-sizing: border-box;
+        }
+
+        /* АДМИН ПАНЕЛЬ */
+        .toolbar { display: none; flex-direction: column; gap: 20px; }
         .toolbar.active { display: flex; }
+        
+        .admin-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            align-items: center;
+            padding: 15px;
+            background: rgba(0,0,0,0.2);
+            border-radius: 16px;
+        }
 
-        input, select { background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.1); padding: 10px; border-radius: 8px; color: white; }
+        /* ТАБЛИЦА */
+        .table-container { overflow-x: auto; width: 100%; }
+        table { width: 100%; border-collapse: separate; border-spacing: 0 8px; min-width: 600px; }
+        th { color: #94a3b8; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; padding: 12px; text-align: center; }
+        td { background: rgba(255,255,255,0.03); padding: 16px; text-align: center; border-top: 1px solid rgba(255,255,255,0.03); }
+        td:first-child { border-radius: 12px 0 0 12px; font-weight: 800; }
+        td:last-child { border-radius: 0 12px 12px 0; }
+        
+        .team-label { text-align: left; font-weight: 600; }
 
-        #toast { visibility: hidden; position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); background: var(--success); color: white; padding: 12px 30px; border-radius: 50px; z-index: 1000; }
-        #toast.show { visibility: visible; animation: fadeIn 0.5s; }
-        @keyframes fadeIn { from {bottom: 0; opacity: 0;} to {bottom: 30px; opacity: 1;} }
+        /* ИНПУТЫ И КНОПКИ */
+        input, select {
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid rgba(255,255,255,0.1);
+            padding: 12px;
+            border-radius: 10px;
+            color: white;
+            outline: none;
+            font-family: inherit;
+        }
+        input:focus { border-color: var(--primary); }
+
+        .btn {
+            border: none;
+            padding: 12px 22px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 700;
+            transition: 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .btn:hover { transform: translateY(-2px); opacity: 0.9; }
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-success { background: var(--success); color: white; }
+
+        /* УВЕДОМЛЕНИЯ */
+        #toast {
+            visibility: hidden;
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--bg-card);
+            color: white;
+            padding: 14px 28px;
+            border-radius: 50px;
+            border: 1px solid var(--primary);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            z-index: 1000;
+            font-weight: 600;
+        }
+        #toast.show { visibility: visible; animation: slideUp 0.4s ease-out; }
+
+        @keyframes slideUp { from { bottom: 0; opacity: 0; } to { bottom: 30px; opacity: 1; } }
+
+        .history-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 14px;
+            background: rgba(255,255,255,0.03);
+            margin-bottom: 8px;
+            border-radius: 12px;
+            border-left: 4px solid var(--primary);
+        }
     </style>
 </head>
 <body>
@@ -95,31 +191,47 @@
 </div>
 
 <div class="header">
-    <h1 id="mainTitle">Футбол: Турнир</h1>
-    <button id="modeBtn" class="btn" style="background: rgba(255,255,255,0.1); color: white;" onclick="handleAuthClick()">Войти</button>
+    <div class="logo">🏆 <span id="sportTitle">Football</span> <b>PRO</b></div>
+    <button id="authBtn" class="btn" style="background: rgba(255,255,255,0.05); color: white;" onclick="handleAuth()">Войти</button>
 </div>
 
 <div class="card">
-    <div class="toolbar" id="toolbar">
-        <select id="t1"></select>
-        <input type="number" id="s1" value="0" style="width: 50px">
-        <span>:</span>
-        <input type="number" id="s2" value="0" style="width: 50px">
-        <select id="t2"></select>
-        <button class="btn btn-main" onclick="addMatch()">Записать</button>
-        <button class="btn" style="background: rgba(255,255,255,0.1); color: white;" onclick="addTeam()">➕ Команда</button>
+    <div class="toolbar" id="adminPanel">
+        <h3 style="margin:0 0 10px 0">Панель управления</h3>
+        
+        <div class="admin-row">
+            <select id="team1Select"></select>
+            <input type="number" id="s1" value="0" style="width: 60px">
+            <span style="font-weight: 900; color: var(--primary)">VS</span>
+            <input type="number" id="s2" value="0" style="width: 60px">
+            <select id="team2Select"></select>
+            <button class="btn btn-primary" onclick="addMatch()">Записать матч</button>
+        </div>
+
+        <div class="admin-row">
+            <input type="text" id="teamInput" placeholder="Имя нового участника..." style="flex: 1; min-width: 200px;">
+            <button class="btn btn-success" onclick="addNewTeam()">➕ Добавить участника</button>
+        </div>
     </div>
 
-    <table>
-        <thead>
-            <tr>
-                <th>№</th>
-                <th style="text-align: left;">Участник</th>
-                <th>И</th><th>В</th><th>Н</th><th>П</th><th id="scoreType">Мячи</th><th>Очки</th>
-            </tr>
-        </thead>
-        <tbody id="tableBody"></tbody>
-    </table>
+    <h2 style="margin-top: 0;">Турнирная таблица</h2>
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>№</th>
+                    <th style="text-align: left;">Участник</th>
+                    <th>И</th><th>В</th><th>Н</th><th>П</th><th id="labelGoals">Мячи</th><th>+/-</th><th>Очки</th>
+                </tr>
+            </thead>
+            <tbody id="tableBody"></tbody>
+        </table>
+    </div>
+</div>
+
+<div class="card" style="max-width: 600px;">
+    <h3>История игр</h3>
+    <div id="historyList"></div>
 </div>
 
 <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
@@ -142,100 +254,146 @@
     const auth = firebase.auth();
     const provider = new firebase.auth.GoogleAuthProvider();
 
-    let currentSport = 'football';
-    let state = { teams: [], matches: [] };
-    let isEditMode = false;
+    let sport = 'football';
+    let data = { teams: [], matches: [] };
+    let canEdit = false;
 
-    // Смена вида спорта
-    function switchSport(sport) {
-        currentSport = sport;
-        document.body.className = (sport === 'billiard') ? 'billiard-theme' : '';
-        document.querySelectorAll('.sport-btn').forEach(btn => btn.classList.remove('active'));
-        event.target.classList.add('active');
-        
-        document.getElementById('mainTitle').innerText = (sport === 'football') ? 'Футбол: Турнир' : 'Бильярд: Турнир';
-        document.getElementById('scoreType').innerText = (sport === 'football') ? 'Мячи' : 'Шары';
-        
-        // Переподключаемся к нужной ветке БД
-        loadData();
+    // СИСТЕМА УВЕДОМЛЕНИЙ
+    function notify(text) {
+        const t = document.getElementById("toast");
+        t.innerText = text;
+        t.className = "show";
+        setTimeout(() => t.className = "", 3000);
     }
 
-    function loadData() {
-        database.ref('/' + currentSport).on('value', (s) => {
-            const d = s.val() || { teams: [], matches: [] };
-            state = d;
-            recalculate();
+    // СМЕНА ВИДА СПОРТА
+    function switchSport(type) {
+        sport = type;
+        document.body.className = (type === 'billiard') ? 'billiard-theme' : '';
+        document.querySelectorAll('.sport-btn').forEach(b => b.classList.remove('active'));
+        event.currentTarget.classList.add('active');
+        
+        document.getElementById('sportTitle').innerText = (type === 'football') ? 'Football' : 'Billiard';
+        document.getElementById('labelGoals').innerText = (type === 'football') ? 'Мячи' : 'Шары';
+        
+        load();
+    }
+
+    // ЗАГРУЗКА ИЗ FIREBASE
+    function load() {
+        database.ref('/' + sport).on('value', (snap) => {
+            const val = snap.val();
+            data = val || { teams: [], matches: [] };
+            calc();
             render();
         });
     }
 
     auth.onAuthStateChanged(user => {
-        isEditMode = !!user;
-        document.getElementById('toolbar').classList.toggle('active', isEditMode);
-        document.getElementById('modeBtn').innerText = user ? "Выйти" : "Войти";
+        canEdit = !!user;
+        document.getElementById('adminPanel').classList.toggle('active', canEdit);
+        document.getElementById('authBtn').innerText = user ? "Выйти" : "Войти";
         render();
     });
 
-    function recalculate() {
-        state.teams.forEach(t => { t.g=0; t.w=0; t.n=0; t.p=0; t.pts=0; t.gs=0; t.gc=0; });
-        state.matches.forEach(m => {
-            const p1 = state.teams.find(t => t.name === m.t1);
-            const p2 = state.teams.find(t => t.name === m.t2);
-            if (p1 && p2) {
-                p1.g++; p2.g++;
-                const s1 = parseInt(m.s1); const s2 = parseInt(m.s2);
-                p1.gs += s1; p1.gc += s2; p2.gs += s2; p2.gc += s1;
-                if (s1 > s2) { 
-                    p1.w++; p1.pts += (currentSport === 'football' ? 3 : 1); p2.p++; 
-                } else if (s1 < s2) { 
-                    p2.w++; p2.pts += (currentSport === 'football' ? 3 : 1); p1.p++; 
-                } else { 
-                    p1.n++; p2.n++; p1.pts += (currentSport === 'football' ? 1 : 0); p2.pts += (currentSport === 'football' ? 1 : 0); 
+    // РАСЧЕТ ТАБЛИЦЫ
+    function calc() {
+        if(!data.teams) data.teams = [];
+        data.teams.forEach(t => { t.g=0; t.w=0; t.n=0; t.p=0; t.pts=0; t.gs=0; t.gc=0; t.diff=0; });
+        
+        if(data.matches) {
+            data.matches.forEach(m => {
+                const t1 = data.teams.find(t => t.name === m.t1);
+                const t2 = data.teams.find(t => t.name === m.t2);
+                if(t1 && t2) {
+                    t1.g++; t2.g++;
+                    const s1 = parseInt(m.s1); const s2 = parseInt(m.s2);
+                    t1.gs += s1; t1.gc += s2; t2.gs += s2; t2.gc += s1;
+                    
+                    if(s1 > s2) {
+                        t1.w++; t1.pts += (sport === 'football' ? 3 : 1); t2.p++;
+                    } else if (s1 < s2) {
+                        t2.w++; t2.pts += (sport === 'football' ? 3 : 1); t1.p++;
+                    } else {
+                        t1.n++; t2.n++; 
+                        t1.pts += (sport === 'football' ? 1 : 0); 
+                        t2.pts += (sport === 'football' ? 1 : 0);
+                    }
                 }
-            }
-        });
-        state.teams.sort((a, b) => b.pts - a.pts || (b.gs - b.gc) - (a.gs - a.gc));
+            });
+        }
+        data.teams.forEach(t => t.diff = t.gs - t.gc);
+        data.teams.sort((a,b) => b.pts - a.pts || b.diff - a.diff);
     }
 
+    // ОТРИСОВКА
     function render() {
-        document.getElementById('tableBody').innerHTML = state.teams.map((t, i) => `
+        document.getElementById('tableBody').innerHTML = data.teams.map((t, i) => `
             <tr>
                 <td>${i+1}</td>
-                <td style="text-align: left; font-weight: bold">${t.name}</td>
+                <td class="team-label">${t.name}</td>
                 <td>${t.g}</td><td>${t.w}</td><td>${t.n}</td><td>${t.p}</td>
-                <td>${t.gs}:${t.gc}</td>
-                <td style="color: var(--primary); font-weight: 900">${t.pts}</td>
+                <td style="color: #94a3b8">${t.gs}:${t.gc}</td>
+                <td style="color: ${t.diff >= 0 ? 'var(--success)' : 'var(--danger)'}; font-weight: bold">
+                    ${t.diff > 0 ? '+' + t.diff : t.diff}
+                </td>
+                <td style="font-size: 18px; font-weight: 800; color: var(--primary)">${t.pts}</td>
             </tr>
         `).join('');
 
-        const o = state.teams.map(t => `<option value="${t.name}">${t.name}</option>`).join('');
-        document.getElementById('t1').innerHTML = document.getElementById('t2').innerHTML = o;
+        document.getElementById('historyList').innerHTML = (data.matches || []).slice().reverse().map((m, i) => `
+            <div class="history-item">
+                <span>${m.t1} <b>${m.s1} : ${m.s2}</b> ${m.t2}</span>
+                ${canEdit ? `<button style="background:none; border:none; color:var(--danger); cursor:pointer" onclick="deleteMatch(${data.matches.length-1-i})">✕</button>` : ''}
+            </div>
+        `).join('');
+
+        const options = data.teams.map(t => `<option value="${t.name}">${t.name}</option>`).join('');
+        document.getElementById('team1Select').innerHTML = document.getElementById('team2Select').innerHTML = options;
+    }
+
+    // ДЕЙСТВИЯ (БЕЗ PROMPT)
+    async function addNewTeam() {
+        const input = document.getElementById('teamInput');
+        const name = input.value.trim();
+        if(!name) return notify("Введите имя участника!");
+        
+        if(!data.teams) data.teams = [];
+        if(data.teams.find(t => t.name === name)) return notify("Такой участник уже есть!");
+
+        data.teams.push({ name: name });
+        await database.ref('/' + sport).set(data);
+        input.value = "";
+        notify("Участник добавлен! ✅");
     }
 
     async function addMatch() {
-        const t1 = document.getElementById('t1').value;
-        const t2 = document.getElementById('t2').value;
-        if(t1 === t2) return alert("Выберите разных участников");
-        state.matches.push({ t1, t2, s1: document.getElementById('s1').value, s2: document.getElementById('s2').value });
-        await database.ref('/' + currentSport).set(state);
+        const t1 = document.getElementById('team1Select').value;
+        const t2 = document.getElementById('team2Select').value;
+        if(!t1 || !t2 || t1 === t2) return notify("Выберите разных участников!");
+
+        if(!data.matches) data.matches = [];
+        data.matches.push({
+            t1, t2, 
+            s1: document.getElementById('s1').value, 
+            s2: document.getElementById('s2').value
+        });
+        await database.ref('/' + sport).set(data);
+        notify("Результат сохранен! 🚀");
     }
 
-    async function addTeam() {
-        const n = prompt("Название:");
-        if(n) {
-            if(!state.teams) state.teams = [];
-            state.teams.push({ name: n });
-            await database.ref('/' + currentSport).set(state);
-        }
+    async function deleteMatch(idx) {
+        data.matches.splice(idx, 1);
+        await database.ref('/' + sport).set(data);
+        notify("Матч удален");
     }
 
-    async function handleAuthClick() {
-        if (auth.currentUser) await auth.signOut();
+    async function handleAuth() {
+        if(auth.currentUser) await auth.signOut();
         else await auth.signInWithPopup(provider);
     }
 
-    // Стартовая загрузка
-    loadData();
+    load();
 </script>
 </body>
 </html>
