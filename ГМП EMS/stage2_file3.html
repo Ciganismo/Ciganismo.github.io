@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>DS: CIGANISMO</title>
+    <style>
+        body {
+            background: #000000;
+            color: #d4d4d4;
+            font-family: 'Courier New', monospace;
+            line-height: 1.6;
+            padding: 40px 10%;
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+            width: 100%;
+        }
+
+        h1 {
+            color: #ffffff;
+            margin: 0;
+            font-size: 2.2em;
+            letter-spacing: 5px;
+            text-transform: uppercase;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.4), 0 0 20px rgba(255, 255, 255, 0.1);
+        }
+
+        .sub-header {
+            color: #d4d4d4;
+            margin: 10px 0;
+            font-size: 0.9em;
+            text-transform: uppercase;
+            opacity: 0.6;
+        }
+
+        .urgent-wrapper {
+            margin: 25px 0;
+            text-align: center;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px; /* Равномерный отступ между кнопками */
+        }
+
+        /* ОБЩИЙ СТИЛЬ ДЛЯ ОБОИХ КНОПОК */
+        .btn-sync {
+            width: 320px; /* Фиксированная ширина как в HUB */
+            height: 50px; /* Фиксированная высота */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: transparent;
+            font-family: 'Courier New', monospace;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.3s;
+            text-decoration: none;
+            box-sizing: border-box;
+            font-size: 0.85em;
+        }
+
+        /* КНОПКА СТАРТА (КРАСНАЯ) */
+        .urgent {
+            color: #ff4444;
+            border: 1px solid #ff4444;
+            box-shadow: 0 0 10px rgba(255, 68, 68, 0.3);
+        }
+        .urgent:hover {
+            background: #ff4444;
+            color: #000;
+            box-shadow: 0 0 20px #ff4444;
+        }
+
+        /* КНОПКА ВОЗВРАТА (БИРЮЗОВАЯ) */
+        .back-btn {
+            color: #00ffcc;
+            border: 1px solid #00ffcc;
+        }
+        .back-btn:hover {
+            background: rgba(0, 255, 204, 0.1);
+            box-shadow: 0 0 20px #00ffcc;
+            color: #fff;
+        }
+
+        .red-line {
+            border-bottom: 2px solid #00ffcc;
+            margin: 20px 0 40px 0;
+            width: 100%;
+            max-width: 900px;
+            box-shadow: 0 0 15px rgba(0, 255, 204, 0.4);
+        }
+
+        .content-body {
+            width: 100%;
+            max-width: 800px;
+            text-align: left;
+        }
+
+        .data-row {
+            margin-bottom: 25px;
+            font-size: 1.1em;
+            text-transform: uppercase;
+        }
+
+        .label {
+            color: #00ffcc;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+
+        .description {
+            margin-top: 50px;
+            border-left: 2px solid #333;
+            padding-left: 20px;
+            color: #888;
+        }
+
+        .conclusion {
+            margin-top: 30px;
+            font-weight: bold;
+            text-transform: uppercase;
+            color: #ff4444;
+        }
+
+        .footer {
+            margin-top: auto;
+            padding-top: 40px;
+            font-size: 0.8em;
+            color: #222;
+            text-align: right;
+            width: 100%;
+        }
+
+        /* ОВЕРЛЕЙ ИГРЫ */
+        #game-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.95);
+            z-index: 1000;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        canvas {
+            border: 2px solid #00ffcc;
+            background: #050505;
+        }
+        #score { color: #00ffcc; font-size: 2em; margin-bottom: 10px; }
+
+        #final-msg {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: #000;
+            color: #00ffcc;
+            z-index: 2000;
+            text-align: center;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.8em;
+            border: 5px solid #00ffcc;
+            box-sizing: border-box;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1>EMERGENCY MEDICAL SERVICES</h1>
+        <p class="sub-header">LOS SANTOS DATABASE | ЦЕНТРАЛЬНЫЙ АРХИВ</p>
+    </div>
+
+    <div class="urgent-wrapper">
+        <button class="btn-sync urgent" onclick="startGame()">[ СТРОГО КОНФИДЕНЦИАЛЬНО ]</button>
+        <a href="stage2.html" class="btn-sync back-btn">[ ВЕРНУТЬСЯ В HUB ]</a>
+    </div>
+
+    <div class="red-line"></div>
+
+    <div class="content-body">
+        <div class="data-row"><span class="label">ДОКУМЕНТ:</span> Больничная карта сотрудника</div>
+        <div class="data-row"><span class="label">ИМЯ ФАМИЛИЯ:</span> Anastasiya Versace</div>
+        <div class="data-row"><span class="label">ДИАГНОЗ:</span> Вывих мизинца правой ноги</div>
+
+        <div class="description">
+            Настоящим подтверждается, что данный сотрудник является действующим членом персонала Emergency Medical Services. Все медицинские записи защищены протоколом конфиденциальности LS-BIO-99.
+        </div>
+
+        <div class="conclusion">
+            ЗАКЛЮЧЕНИЕ ТЕРАПЕВТА: Несмотря на отклонения, допущен к работе
+        </div>
+    </div>
+
+    <div class="footer">
+        Generated by: Barack | Discord: ciganismo
+    </div>
+
+    <div id="game-overlay">
+        <div id="score">СЧЕТ: 0 / 5</div>
+        <canvas id="snakeGame" width="400" height="400"></canvas>
+    </div>
+
+    <div id="final-msg">
+        <span style="letter-spacing: 2px;">Часть IP-Адреса: .44 <br><br> <small style="font-size: 0.5em; color: #555;">prod. by Ciganismo</small></span>
+        <a href="stage2.html" class="btn-sync back-btn" style="margin-top: 40px;">[ ВЕРНУТЬСЯ В HUB ]</a>
+    </div>
+
+<script>
+    const canvas = document.getElementById("snakeGame");
+    const ctx = canvas.getContext("2d");
+    const scoreElement = document.getElementById("score");
+    const grid = 20;
+    let count = 0; let score = 0; let gameActive = false;
+    let snake = { x: 160, y: 160, dx: grid, dy: 0, cells: [], maxCells: 4 };
+    let apple = { x: 320, y: 320 };
+
+    function getRandomInt(min, max) { return Math.floor(Math.random() * (max - min)) + min; }
+    function startGame() { document.getElementById('game-overlay').style.display = 'flex'; gameActive = true; requestAnimationFrame(loop); }
+
+    function loop() {
+        if (!gameActive) return;
+        requestAnimationFrame(loop);
+        if (++count < 6) return;
+        count = 0;
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        snake.x += snake.dx; snake.y += snake.dy;
+        if (snake.x < 0) snake.x = canvas.width - grid; else if (snake.x >= canvas.width) snake.x = 0;
+        if (snake.y < 0) snake.y = canvas.height - grid; else if (snake.y >= canvas.height) snake.y = 0;
+        snake.cells.unshift({x: snake.x, y: snake.y});
+        if (snake.cells.length > snake.maxCells) snake.cells.pop();
+        ctx.fillStyle = '#00ffcc'; ctx.fillRect(apple.x, apple.y, grid-1, grid-1);
+        ctx.fillStyle = '#ff4444';
+        snake.cells.forEach(function(cell, index) {
+            ctx.fillRect(cell.x, cell.y, grid-1, grid-1);
+            if (cell.x === apple.x && cell.y === apple.y) {
+                snake.maxCells++; score++;
+                scoreElement.innerHTML = "СЧЕТ: " + score + " / 5";
+                apple.x = getRandomInt(0, 20) * grid; apple.y = getRandomInt(0, 20) * grid;
+                if (score >= 5) { gameActive = false; document.getElementById('final-msg').style.display = 'flex'; }
+            }
+            for (let i = index + 1; i < snake.cells.length; i++) {
+                if (cell.x === snake.cells[i].x && cell.y === snake.cells[i].y) {
+                    score = 0; scoreElement.innerHTML = "СЧЕТ: 0 / 5";
+                    snake.maxCells = 4; snake.dx = grid; snake.dy = 0;
+                    snake.x = 160; snake.y = 160; snake.cells = [];
+                }
+            }
+        });
+    }
+
+    document.addEventListener('keydown', function(e) {
+        if ((e.which === 37 || e.which === 65) && snake.dx === 0) { snake.dx = -grid; snake.dy = 0; }
+        else if ((e.which === 38 || e.which === 87) && snake.dy === 0) { snake.dy = -grid; snake.dx = 0; }
+        else if ((e.which === 39 || e.which === 68) && snake.dx === 0) { snake.dx = grid; snake.dy = 0; }
+        else if ((e.which === 40 || e.which === 83) && snake.dy === 0) { snake.dy = grid; snake.dx = 0; }
+    });
+</script>
+</body>
+</html>

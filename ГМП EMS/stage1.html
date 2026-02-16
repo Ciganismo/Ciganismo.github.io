@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>DS: CIGANISMO</title>
+    <style>
+        body {
+            margin: 0;
+            background: #000000;
+            color: #d4d4d4;
+            font-family: 'Courier New', monospace;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+            padding: 40px 10%;
+            box-sizing: border-box;
+        }
+
+        .header { text-align: center; margin-bottom: 10px; }
+        h1 {
+            color: #ffffff;
+            margin: 0;
+            font-size: 2.2em;
+            letter-spacing: 5px;
+            font-weight: normal;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.4);
+            text-transform: uppercase;
+        }
+
+        .red-line {
+            border-bottom: 2px solid #ff4444;
+            margin: 15px 0 30px 0;
+            width: 100%;
+            box-shadow: 0 0 15px rgba(255, 68, 68, 0.5);
+            transition: 0.8s ease;
+        }
+
+        .ui {
+            background: #050505;
+            padding: 25px;
+            border: 1px solid #333;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+            z-index: 10;
+        }
+
+        .back-to-main {
+            margin-top: 10px;
+            color: #ff4444;
+            text-decoration: none;
+            border: 1px solid #ff4444;
+            padding: 12px 30px;
+            font-size: 0.85em;
+            transition: 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            display: inline-block;
+            font-weight: bold;
+        }
+
+        .back-to-main:hover {
+            background: rgba(255, 68, 68, 0.1);
+            box-shadow: 0 0 15px #ff4444;
+        }
+
+        #status {
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            height: 25px;
+            font-size: 1.1em;
+            color: #ff4444;
+            transition: 0.3s;
+        }
+
+        .control-row {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            width: 100%;
+            max-width: 600px;
+        }
+
+        .control-row span {
+            width: 180px;
+            font-size: 13px;
+            color: #ff4444;
+            font-weight: bold;
+            letter-spacing: 1px;
+            transition: 0.3s;
+        }
+
+        input[type=range] {
+            flex-grow: 1;
+            appearance: none;
+            background: #222;
+            height: 2px;
+            outline: none;
+        }
+
+        input[type=range]::-webkit-slider-thumb {
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            background: #ff4444;
+            cursor: pointer;
+            box-shadow: 0 0 10px #ff4444;
+        }
+
+        /* Бирюзовый стиль при блокировке */
+        input[type=range]:disabled::-webkit-slider-thumb {
+            background: #00ffcc !important;
+            box-shadow: 0 0 20px #00ffcc;
+            cursor: default;
+        }
+
+        .viewport {
+            flex-grow: 1;
+            perspective: 1500px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-top: 20px;
+        }
+
+        .scene {
+            position: relative;
+            width: 500px;
+            height: 500px;
+            transform-style: preserve-3d;
+            transition: filter 0.8s ease;
+        }
+
+        .dot {
+            position: absolute;
+            background-image: url('https://i.postimg.cc/XJndygyS/20260206195034-1.jpg');
+            background-repeat: no-repeat;
+            pointer-events: none;
+        }
+
+        .footer {
+            margin-top: 20px;
+            font-size: 0.8em;
+            color: #444;
+            text-align: right;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1>EMERGENCY MEDICAL SERVICES</h1>
+    </div>
+
+    <div class="ui" id="uiBox">
+        <div id="status">АНАЛИЗ СИГНАЛА...</div>
+
+        <div class="control-row"><span id="lX">ГОР. СИНХРОНИЗАЦИЯ</span><input type="range" class="slider" id="rangeX" min="0" max="100" value="10"></div>
+        <div class="control-row"><span id="lY">ВЕРТ. СТАБИЛИЗАЦИЯ</span><input type="range" class="slider" id="rangeY" min="0" max="100" value="90"></div>
+        <div class="control-row"><span id="lZ">ФОКУС ГЛУБИНЫ</span><input type="range" class="slider" id="rangeZ" min="0" max="100" value="20"></div>
+
+        <a href="hub.html" class="back-to-main" id="hub-btn">[ ВЕРНУТЬСЯ В HUB ]</a>
+    </div>
+
+    <div class="red-line" id="mainLine"></div>
+
+    <div class="viewport">
+        <div class="scene" id="scene"></div>
+    </div>
+
+    <div class="footer">
+        Generated by: Barack | Discord: ciganismo
+    </div>
+
+    <script>
+        const scene = document.getElementById('scene');
+        const sliders = document.querySelectorAll('.slider');
+        const status = document.getElementById('status');
+        const hubBtn = document.getElementById('hub-btn');
+        const mainLine = document.getElementById('mainLine');
+
+        // Устанавливаем четкие цели
+        const targetX = Math.floor(Math.random() * 70) + 15;
+        const targetY = Math.floor(Math.random() * 70) + 15;
+        const targetZ = Math.floor(Math.random() * 70) + 15;
+
+        const gridSize = 20;
+        const dotSize = 500 / gridSize;
+        const dots = [];
+
+        // Создание сетки
+        for (let y = 0; y < gridSize; y++) {
+            for (let x = 0; x < gridSize; x++) {
+                const dot = document.createElement('div');
+                dot.className = 'dot';
+                dot.style.width = (dotSize + 0.5) + "px";
+                dot.style.height = (dotSize + 0.5) + "px";
+                const left = x * dotSize;
+                const top = y * dotSize;
+                dot.style.left = left + "px";
+                dot.style.top = top + "px";
+                dot.style.backgroundPosition = `-${left}px -${top}px`;
+                dot.style.backgroundSize = "500px 500px";
+
+                // Хаотичный разброс
+                const randX = (Math.random() - 0.5) * 800;
+                const randY = (Math.random() - 0.5) * 800;
+                const randZ = (Math.random() - 0.5) * 1500;
+                dots.push({ el: dot, rx: randX, ry: randY, rz: randZ });
+                scene.appendChild(dot);
+            }
+        }
+
+        function render() {
+            const valX = parseInt(document.getElementById('rangeX').value);
+            const valY = parseInt(document.getElementById('rangeY').value);
+            const valZ = parseInt(document.getElementById('rangeZ').value);
+
+            const errX = Math.abs(valX - targetX);
+            const errY = Math.abs(valY - targetY);
+            const errZ = Math.abs(valZ - targetZ);
+
+            // Общий коэффициент хаоса
+            let chaos = (errX + errY + errZ) / 120;
+            if (chaos > 1) chaos = 1;
+            if (chaos < 0.01) chaos = 0;
+
+            dots.forEach(d => {
+                const tx = d.rx * chaos;
+                const ty = d.ry * chaos;
+                const tz = d.rz * chaos;
+                d.el.style.transform = `translate3d(${tx}px, ${ty}px, ${tz}px)`;
+                d.el.style.opacity = 1 - (chaos * 0.8);
+            });
+
+            scene.style.transform = `rotateY(${(valX - targetX) * 1.2}deg) rotateX(${(valY - targetY) * -1.2}deg)`;
+
+            // ПРОВЕРКА НА 100% СБОРКУ (Допуск 0)
+            if (valX === targetX && valY === targetY && valZ === targetZ) {
+                status.innerText = "ФОТО ДЕШИФРОВАНО! ✅";
+                status.style.color = "#00ffcc";
+
+                // Бирюзовая подсветка
+                scene.style.filter = "drop-shadow(0 0 30px #00ffcc) brightness(1.2)";
+
+                hubBtn.style.color = "#00ffcc";
+                hubBtn.style.borderColor = "#00ffcc";
+                hubBtn.innerText = "[ ДОСТУП РАЗРЕШЕН: В ХАБ ]";
+
+                mainLine.style.borderBottomColor = "#00ffcc";
+                mainLine.style.boxShadow = "0 0 20px #00ffcc";
+
+                document.getElementById('lX').style.color = "#00ffcc";
+                document.getElementById('lY').style.color = "#00ffcc";
+                document.getElementById('lZ').style.color = "#00ffcc";
+
+                // Полная блокировка
+                sliders.forEach(s => {
+                    s.disabled = true;
+                });
+            }
+        }
+
+        sliders.forEach(s => s.oninput = render);
+
+        // Начальный рендер, чтобы применился хаос
+        render();
+    </script>
+</body>
+</html>

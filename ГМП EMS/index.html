@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>CIGANISMO | SYSTEM</title>
+    <style>
+        body {
+            background: #000;
+            color: #ff4444;
+            font-family: 'Courier New', monospace;
+            margin: 0;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+
+        #matrix-bg {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            z-index: 1;
+            opacity: 0.35; /* Увеличил общую видимость матрицы */
+        }
+
+        .container {
+            position: relative;
+            z-index: 2;
+            text-align: center;
+            background: rgba(0, 0, 0, 0.85);
+            padding: 40px;
+            border: 1px solid #ff4444;
+            box-shadow: 0 0 30px rgba(255, 68, 68, 0.2);
+            min-width: 600px;
+        }
+
+        h1 { font-size: 1.8em; letter-spacing: 5px; margin-bottom: 10px; text-shadow: 0 0 10px #ff4444; }
+        .status-box { font-size: 1.1em; margin-bottom: 30px; color: #fff; text-transform: uppercase; letter-spacing: 2px; }
+        #timer-display { font-size: 4em; font-weight: bold; margin: 20px 0; color: #ff4444; text-shadow: 0 0 20px rgba(255, 68, 68, 0.5); display: flex; gap: 20px; justify-content: center; }
+        .unit { font-size: 0.3em; display: block; text-transform: uppercase; opacity: 0.6; }
+        .enter-btn { display: none; margin-top: 20px; background: transparent; color: #00ffcc; border: 2px solid #00ffcc; padding: 15px 40px; font-family: 'Courier New'; font-size: 1.2em; cursor: pointer; text-transform: uppercase; letter-spacing: 3px; transition: 0.3s; }
+        .enter-btn:hover { background: #00ffcc; color: #000; box-shadow: 0 0 30px #00ffcc; }
+        .msk-info { font-size: 0.7em; color: #444; margin-top: 15px; text-transform: uppercase; }
+        .bypass-key { position: absolute; bottom: 2px; right: 2px; width: 15px; height: 15px; background: transparent; cursor: pointer; z-index: 10; }
+    </style>
+</head>
+<body>
+
+    <canvas id="matrix-bg"></canvas>
+
+    <div class="container">
+        <h1>«Угроза конфиденциальности»</h1>
+        <div class="status-box" id="status-text">СИНХРОНИЗАЦИЯ С ОБЛАКОМ...</div>
+
+        <div id="timer-display">
+            <div><span id="days">00</span><span class="unit">Дней</span></div>
+            <div><span id="hours">00</span><span class="unit">Часов</span></div>
+            <div><span id="minutes">00</span><span class="unit">Минут</span></div>
+            <div><span id="seconds">00</span><span class="unit">Секунд</span></div>
+        </div>
+
+        <button class="enter-btn" id="entry-button" onclick="window.location.href='hub.html'">
+            [ УСТАНОВИТЬ СОЕДИНЕНИЕ ]
+        </button>
+
+        <div class="msk-info">Discord: ciganismo | LIVE SYNC ACTIVE</div>
+
+        <div class="bypass-key" onclick="window.location.href='hub.html'"></div>
+    </div>
+
+    <script>
+        const GIST_URL = "https://gist.githubusercontent.com/Ciganismo/66cdc3f89ccc543f33a9859b3ea79e4b/raw/gistfile1.txt";
+
+        let targetDateStr = "Feb 14, 2026 00:00:00";
+
+        async function syncDate() {
+            try {
+                const response = await fetch(`${GIST_URL}?t=${new Date().getTime()}`, {
+                    cache: 'no-store'
+                });
+
+                const remoteDate = await response.text();
+                const trimmedDate = remoteDate.trim();
+
+                if (trimmedDate && !isNaN(Date.parse(trimmedDate))) {
+                    if (targetDateStr !== trimmedDate) {
+                        targetDateStr = trimmedDate;
+                        console.log("ДАННЫЕ ОБНОВЛЕНЫ: " + targetDateStr);
+                    }
+                }
+            } catch (err) {
+                console.warn("СИНХРОНИЗАЦИЯ ПРЕРВАНА. ОЖИДАНИЕ...");
+            }
+        }
+
+        function updateCountdown() {
+            const now = new Date();
+            const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
+            const currentTimeMSK = utc + (3600000 * 3);
+
+            const mskTarget = new Date(targetDateStr).getTime();
+            const distance = mskTarget - currentTimeMSK;
+
+            const timerUI = document.getElementById("timer-display");
+            const btnUI = document.getElementById("entry-button");
+            const statusUI = document.getElementById("status-text");
+
+            if (distance <= 0) {
+                timerUI.style.display = "none";
+                btnUI.style.display = "inline-block";
+                statusUI.innerText = "ГМП УЖЕ НАЧАЛОСЬ";
+                statusUI.style.color = "#00ffcc";
+            } else {
+                timerUI.style.display = "flex";
+                btnUI.style.display = "none";
+                statusUI.innerText = "Ожидание начала ГМП...";
+                statusUI.style.color = "#fff";
+
+                const d = Math.floor(distance / (1000 * 60 * 60 * 24));
+                const h = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                const m = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+                const s = Math.floor((distance % (1000 * 60)) / 1000);
+
+                document.getElementById("days").innerText = d.toString().padStart(2, '0');
+                document.getElementById("hours").innerText = h.toString().padStart(2, '0');
+                document.getElementById("minutes").innerText = m.toString().padStart(2, '0');
+                document.getElementById("seconds").innerText = s.toString().padStart(2, '0');
+            }
+        }
+
+        async function init() {
+            await syncDate();
+            setInterval(updateCountdown, 1000);
+            setInterval(syncDate, 10000);
+            updateCountdown();
+        }
+
+        init();
+
+        // --- ОБНОВЛЕННАЯ ЗАМЕТНАЯ МАТРИЦА ---
+        const canvas = document.getElementById('matrix-bg');
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#$%^&*()";
+        const fontSize = 18; // Слегка увеличил размер
+        const columns = canvas.width / fontSize;
+        const drops = Array(Math.floor(columns)).fill(1);
+
+        function drawMatrix() {
+            ctx.fillStyle = "rgba(0, 0, 0, 0.1)"; // Чуть плотнее фон для четкости шлейфа
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            ctx.font = fontSize + "px monospace";
+
+            for (let i = 0; i < drops.length; i++) {
+                const text = letters.charAt(Math.floor(Math.random() * letters.length));
+
+                // Эффект свечения
+                ctx.shadowBlur = 12;
+                ctx.shadowColor = "#ff0000";
+                ctx.fillStyle = "#ff4444";
+
+                // Случайные яркие символы (вспышки)
+                if (Math.random() > 0.95) {
+                    ctx.fillStyle = "#ffffff";
+                    ctx.shadowBlur = 20;
+                }
+
+                ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+
+                // Сброс тени для следующей итерации
+                ctx.shadowBlur = 0;
+
+                if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) drops[i] = 0;
+                drops[i]++;
+            }
+        }
+        setInterval(drawMatrix, 50);
+        window.addEventListener('resize', () => { canvas.width = window.innerWidth; canvas.height = window.innerHeight; });
+    </script>
+</body>
+</html>

@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>DS: CIGANISMO</title>
+    <style>
+        body {
+            background: #000000; /* Чистый черный */
+            color: #d4d4d4;
+            font-family: 'Courier New', monospace;
+            line-height: 1.6;
+            padding: 60px;
+            display: flex;
+            justify-content: center;
+            position: relative;
+            min-height: 100vh;
+            margin: 0;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 850px;
+            width: 100%;
+            z-index: 2;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        /* БЕЛЫЙ СВЕТЯЩИЙСЯ ЗАГОЛОВОК */
+        h1 {
+            color: #fff;
+            margin: 0;
+            font-size: 2.2em;
+            letter-spacing: 5px;
+            text-transform: uppercase;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.4), 0 0 20px rgba(255, 255, 255, 0.1);
+        }
+
+        .sub-header { color: #888; margin: 10px 0; font-size: 0.9em; text-transform: uppercase; letter-spacing: 1px; }
+
+        /* БИРЮЗОВАЯ СВЕТЯЩАЯСЯ ЛИНИЯ */
+        .red-line {
+            border-bottom: 2px solid #00ffcc;
+            margin: 20px 0;
+            box-shadow: 0 0 15px rgba(0, 255, 204, 0.4);
+        }
+
+        .status-box {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        .urgent {
+            color: #ff4444;
+            border: 1px solid #ff4444;
+            padding: 8px 35px;
+            display: inline-block;
+            font-weight: bold;
+            font-size: 0.9em;
+            text-transform: uppercase;
+            margin-bottom: 20px;
+            box-shadow: 0 0 10px rgba(255, 68, 68, 0.2);
+        }
+
+        /* ТВОЯ КНОПКА В БИРЮЗОВОМ СТИЛЕ */
+        .back-btn {
+            display: block;
+            margin: 0 auto;
+            background: transparent;
+            color: #00ffcc;
+            border: 1px solid #00ffcc;
+            padding: 12px 30px;
+            text-decoration: none;
+            font-size: 0.85em;
+            width: fit-content;
+            transition: 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            font-weight: bold;
+        }
+
+        .back-btn:hover {
+            background: rgba(0, 255, 204, 0.1);
+            box-shadow: 0 0 20px #00ffcc;
+            color: #fff;
+        }
+
+        .data-section { margin-top: 30px; }
+        .data-row { margin-bottom: 20px; font-size: 1.1em; text-transform: uppercase; }
+
+        /* БИРЮЗОВЫЕ МЕТКИ */
+        .label {
+            color: #00ffcc;
+            font-weight: bold;
+            margin-right: 10px;
+            text-shadow: 0 0 5px rgba(0, 255, 204, 0.3);
+        }
+
+        .description {
+            margin-top: 40px;
+            color: #aaa;
+            border-left: 2px solid #222;
+            padding-left: 20px;
+        }
+
+        .description b { color: #ff4444; }
+
+        /* СКРЫТЫЙ ТРИГГЕР (БИРЮЗОВЫЙ ПИКСЕЛЬ) */
+        .secret-trigger {
+            position: fixed;
+            bottom: 15px;
+            right: 15px;
+            width: 6px;
+            height: 6px;
+            background: #00ffcc;
+            cursor: pointer;
+            z-index: 100;
+            opacity: 0.1;
+            transition: 0.3s;
+            box-shadow: 0 0 10px #00ffcc;
+        }
+
+        .secret-trigger:hover { opacity: 0.8; }
+
+        /* СЕКРЕТНАЯ ИНФО (КРАСНАЯ) */
+        #secret-info {
+            display: none;
+            margin-top: 40px;
+            padding: 20px;
+            border: 1px dashed #ff4444;
+            color: #ff4444;
+            background: rgba(255, 0, 0, 0.05);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            animation: flicker 0.2s infinite alternate;
+        }
+
+        @keyframes flicker {
+            from { opacity: 0.8; }
+            to { opacity: 1; }
+        }
+
+        .footer {
+            position: fixed;
+            bottom: 30px;
+            right: 40px;
+            font-size: 0.75em;
+            color: #222;
+        }
+
+        @media (max-width: 600px) {
+            body { padding: 20px; }
+            h1 { font-size: 1.5em; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <h1>EMERGENCY MEDICAL SERVICES</h1>
+        <p class="sub-header">LOS SANTOS DATABASE | ЦЕНТРАЛЬНЫЙ АРХИВ</p>
+    </div>
+
+    <div class="status-box">
+        <div class="urgent">СТРОГО КОНФИДЕНЦИАЛЬНО</div>
+        <a href="stage2.html" class="back-btn">[ ВЕРНУТЬСЯ В HUB ]</a>
+    </div>
+
+    <div class="red-line"></div>
+
+    <div class="data-section">
+        <div class="data-row"><span class="label">ДОКУМЕНТ:</span> Больничная карта сотрудника</div>
+        <div class="data-row"><span class="label">ИМЯ ФАМИЛИЯ: </span>Equi Dripset</div>
+        <div class="data-row"><span class="label">ДИАГНОЗ: </span>Цистит вытекающий в недержание мочи</div>
+    </div>
+
+    <div class="description">
+        <p>Настоящим подтверждается, что данный сотрудник является действующим членом персонала Emergency Medical Services. Все медицинские записи защищены протоколом LS-PRIVACY-01.</p>
+        <p><b>ЗАКЛЮЧЕНИЕ ТЕРАПЕВТА:</b> Несмотря на отклонения, допущен к работе</p>
+    </div>
+
+    <div id="secret-info">
+        <b style="text-decoration: underline;">ВЗЛОМ СИСТЕМЫ: ДОПОЛНИТЕЛЬНЫЕ ДАННЫЕ</b><br><br>
+        ЧАСТЬ IP-Адреса: 21. <br>
+        Примечание к сотруднику: Сотрудник подозревается в хищении препаратов.
+    </div>
+
+    <div class="footer">
+        Generated by: Barack | Discord: ciganismo
+    </div>
+</div>
+
+<div class="secret-trigger" title="System Glitch" onclick="toggleSecret()"></div>
+
+<script>
+    function toggleSecret() {
+        const info = document.getElementById('secret-info');
+        if (info.style.display === 'block') {
+            info.style.display = 'none';
+        } else {
+            info.style.display = 'block';
+            window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+        }
+    }
+</script>
+
+</body>
+</html>
