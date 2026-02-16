@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🕵️ Шпион: Игровой Модуль</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        :root { --spy-orange: #f97316; --bg: #18181b; --card: #27272a; --text: #f4f4f5; }
+        body {
+            font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text);
+            margin: 0; display: flex; flex-direction: column; align-items: center; min-height: 100vh;
+        }
+        .container { width: 90%; max-width: 500px; padding: 20px; text-align: center; }
+        .card { background: var(--card); padding: 30px; border-radius: 24px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.05); }
+        
+        h1 { font-size: 32px; font-weight: 900; color: var(--spy-orange); margin-bottom: 10px; }
+        .setup-list { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin: 20px 0; }
+        .player-badge { background: rgba(255,255,255,0.1); padding: 8px 15px; border-radius: 50px; font-size: 14px; }
+        
+        .role-box { 
+            display: none; background: var(--spy-orange); color: white; padding: 40px; 
+            border-radius: 20px; margin: 20px 0; cursor: pointer; font-weight: 800; font-size: 24px;
+        }
+
+        .btn { 
+            border: none; padding: 15px 30px; border-radius: 12px; cursor: pointer; 
+            font-weight: 700; font-size: 16px; transition: 0.2s; width: 100%; margin-top: 10px;
+        }
+        .btn-start { background: var(--spy-orange); color: white; }
+        .btn-finish { background: #3f3f46; color: white; margin-top: 20px; }
+        .btn-win { background: #10b981; color: white; }
+        .btn-lose { background: #ef4444; color: white; }
+
+        .hidden { display: none; }
+        #timer { font-size: 40px; font-weight: 900; margin: 20px 0; color: #94a3b8; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>SPYFALL</h1>
+    <p id="status">Загрузка игроков из базы...</p>
+
+    <div id="setup-screen" class="card">
+        <h3>Участники сегодня:</h3>
+        <div id="players-list" class="setup-list"></div>
+        <button class="btn btn-start" onclick="startGame()">РАЗДАТЬ РОЛИ</button>
+    </div>
+
+    <div id="role-screen" class="card hidden">
+        <h3 id="player-turn-name">Игрок, подойди!</h3>
+        <p>Нажми и удерживай кнопку, чтобы увидеть роль</p>
+        <div id="role-display" class="role-box" onmousedown="showRole()" onmouseup="hideRole()" ontouchstart="showRole()" ontouchend="hideRole()">УДЕРЖИВАЙ</div>
+        <button class="btn btn-finish" id="next-player-btn" onclick="nextPlayer()">СЛЕДУЮЩИЙ</button>
+    </div>
+
+    <div id="play-screen" class="card hidden">
+        <div id="timer">05:00</div>
+        <h3>Игра в процессе...</h3>
+        <p>Кто же шпион?</p>
+        <div style="margin-top: 30px">
+            <button class="btn btn-win" onclick="finishGame('lose')">ШПИОН ПОЙМАН (Победа жителей)</button>
+            <button class="btn btn-lose" onclick="finishGame('win')">ШПИОН ВЫИГРАЛ</button>
+        </div>
+    </div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
+
+<script>
+    const firebaseConfig = {
+        apiKey: "AIzaSyC77DjtldFSm-3VIWXQrHsCYL3hzjdUU-8",
+        authDomain: "tabliz-baf06.firebaseapp.com",
+        databaseURL: "https://tabliz-baf06-default-rtdb.firebaseio.com",
+        projectId: "tabliz-baf06",
+        storageBucket: "tabliz-baf06.firebasestorage.app",
+        messagingSenderId: "42955040155",
+        appId: "1:42955040155:web:f23b7cf6b27b6917c2ad3e",
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    const locations = ["Орбитальная станция", "Больница", "Цирк", "Воинская часть", "Ресторан", "Самолет", "Школа", "Отель", "Театр", "Подводная лодка"];
+    
+    let players = [];
+    let spyName = "";
+    let currentLocation = "";
+    let currentPlayerIdx = 0;
+    let gameRoles = [];
+
+    // 1. ПОДТЯГИВАЕМ ИГРОКОВ
+    db.ref('/spy/teams').on('value', (snap) => {
+        const data = snap.val();
+        if(data) {
+            players = data.map(t => t.name);
+            renderPlayers();
+            document.getElementById('status').innerText = "Готовы к игре";
+        }
+    });
+
+    function renderPlayers() {
+        document.getElementById('players-list').innerHTML = players.map(p => `<span class="player-badge">${p}</span>`).join('');
+    }
+
+    // 2. СТАРТ ИГРЫ (Генерация)
+    function startGame() {
+        if(players.length < 3) return alert("Нужно минимум 3 игрока!");
+        
+        spyName = players[Math.floor(Math.random() * players.length)];
+        currentLocation = locations[Math.floor(Math.random() * locations.length)];
+        currentPlayerIdx = 0;
+        
+        document.getElementById('setup-screen').classList.add('hidden');
+        document.getElementById('role-screen').classList.remove('hidden');
+        document.getElementById('role-display').style.display = 'block';
+        updateTurn();
+    }
+
+    function updateTurn() {
+        document.getElementById('player-turn-name').innerText = `Очередь: ${players[currentPlayerIdx]}`;
+        document.getElementById('role-display').innerText = "УДЕРЖИВАЙ";
+    }
+
+    function showRole() {
+        const name = players[currentPlayerIdx];
+        document.getElementById('role-display').innerText = (name === spyName) ? "ТЫ ШПИОН! 🕵️" : currentLocation;
+    }
+
+    function hideRole() {
+        document.getElementById('role-display').innerText = "УДЕРЖИВАЙ";
+    }
+
+    function nextPlayer() {
+        currentPlayerIdx++;
+        if(currentPlayerIdx >= players.length) {
+            startTimer();
+            document.getElementById('role-screen').classList.add('hidden');
+            document.getElementById('play-screen').classList.remove('hidden');
+        } else {
+            updateTurn();
+        }
+    }
+
+    // 3. ТАЙМЕР
+    function startTimer() {
+        let time = 300;
+        const timerEl = document.getElementById('timer');
+        const interval = setInterval(() => {
+            let min = Math.floor(time / 60);
+            let sec = time % 60;
+            timerEl.innerText = `${min}:${sec < 10 ? '0' : ''}${sec}`;
+            if(time <= 0) clearInterval(interval);
+            time--;
+        }, 1000);
+    }
+
+    // 4. ЗАПИСЬ РЕЗУЛЬТАТА В БАЗУ
+    async function finishGame(result) {
+        if(!confirm("Завершить и сохранить результат в статистику?")) return;
+
+        const newMatch = {
+            spy: spyName,
+            res: result, // 'win' или 'lose'
+            loc: currentLocation,
+            date: new Date().toLocaleString()
+        };
+
+        // Берем текущие матчи, добавляем новый и сохраняем обратно
+        const snap = await db.ref('/spy/matches').get();
+        let matches = snap.val() || [];
+        matches.push(newMatch);
+        
+        await db.ref('/spy/matches').set(matches);
+        
+        alert("Результат записан! Возвращаемся в меню.");
+        location.reload(); // Перезапуск для новой игры
+    }
+</script>
+</body>
+</html>
