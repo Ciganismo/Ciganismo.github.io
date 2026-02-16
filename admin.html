@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>⚙️ Admin Panel: Spy Game</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <style>
+        :root { --bg: #0f172a; --card: #1e293b; --primary: #6366f1; --danger: #ef4444; --success: #10b981; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg); color: #f8fafc; margin: 0; padding: 20px; }
+        .container { max-width: 800px; margin: 0 auto; }
+        
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+        .card { background: var(--card); border-radius: 20px; padding: 25px; margin-bottom: 20px; border: 1px solid rgba(255,255,255,0.1); }
+        
+        .btn { border: none; padding: 12px 20px; border-radius: 10px; cursor: pointer; font-weight: 700; color: white; transition: 0.2s; }
+        .btn-primary { background: var(--primary); }
+        .btn-danger { background: var(--danger); padding: 5px 10px; font-size: 12px; }
+        .btn-ghost { background: rgba(255,255,255,0.05); color: #94a3b8; text-decoration: none; font-size: 14px; }
+        
+        input { background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.1); padding: 12px; border-radius: 10px; color: white; width: 100%; box-sizing: border-box; margin-bottom: 10px; }
+        
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        th { text-align: left; color: #94a3b8; font-size: 12px; padding: 10px; border-bottom: 1px solid rgba(255,255,255,0.1); }
+        td { padding: 12px 10px; border-bottom: 1px solid rgba(255,255,255,0.05); }
+
+        #admin-controls { display: none; } /* Скрыто до авторизации */
+        .auth-box { text-align: center; padding: 50px 0; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <h1>Панель <span style="color:var(--primary)">Управления</span></h1>
+        <a href="index.html" class="btn-ghost">← На главную</a>
+    </div>
+
+    <div id="auth-screen" class="card auth-box">
+        <p>Для управления данными нужно войти в аккаунт команды</p>
+        <button class="btn btn-primary" onclick="login()">🔐 Войти через Google</button>
+    </div>
+
+    <div id="admin-controls">
+        <div class="card">
+            <h3>Участники</h3>
+            <div style="display:flex; gap:10px; margin-bottom: 20px;">
+                <input type="text" id="new-player-name" placeholder="Введите имя игрока...">
+                <button class="btn btn-primary" onclick="addPlayer()" style="white-space:nowrap">Добавить</button>
+            </div>
+            <table id="players-table">
+                <thead><tr><th>Имя</th><th style="text-align:right">Действие</th></tr></thead>
+                <tbody id="players-list"></tbody>
+            </table>
+        </div>
+
+        <div class="card">
+            <h3>История матчей</h3>
+            <table id="matches-table">
+                <thead><tr><th>Дата</th><th>Шпион</th><th>Итог</th><th style="text-align:right">Удаление</th></tr></thead>
+                <tbody id="matches-list"></tbody>
+            </table>
+            <button class="btn btn-danger" style="width: 100%; margin-top: 30px; opacity: 0.5" onclick="factoryReset()">⚠️ ПОЛНЫЙ СБРОС ВСЕХ ДАННЫХ</button>
+        </div>
+    </div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
+
+<script>
+    const firebaseConfig = {
+        apiKey: "AIzaSyC77DjtldFSm-3VIWXQrHsCYL3hzjdUU-8",
+        authDomain: "tabliz-baf06.firebaseapp.com",
+        databaseURL: "https://tabliz-baf06-default-rtdb.firebaseio.com",
+        projectId: "tabliz-baf06",
+        appId: "1:42955040155:web:f23b7cf6b27b6917c2ad3e"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+    const auth = firebase.auth();
+
+    // Следим за входом
+    auth.onAuthStateChanged(user => {
+        if (user) {
+            document.getElementById('auth-screen').style.display = 'none';
+            document.getElementById('admin-controls').style.display = 'block';
+            loadData();
+        } else {
+            document.getElementById('auth-screen').style.display = 'block';
+            document.getElementById('admin-controls').style.display = 'none';
+        }
+    });
+
+    async function login() {
+        try {
+            await auth.signInWithPopup(new firebase.auth.GoogleAuthProvider());
+        } catch (e) { alert("Ошибка входа: " + e.message); }
+    }
+
+    function loadData() {
+        db.ref('/spy').on('value', snap => {
+            const data = snap.val() || { teams: [], matches: [] };
+            renderPlayers(data.teams || []);
+            renderMatches(data.matches || []);
+        });
+    }
+
+    function renderPlayers(teams) {
+        const list = document.getElementById('players-list');
+        list.innerHTML = teams.map((p, i) => `
+            <tr>
+                <td><b>${p.name}</b></td>
+                <td style="text-align:right"><button class="btn btn-danger" onclick="deleteItem('teams', ${i})">✕ Удалить</button></td>
+            </tr>
+        `).join('');
+    }
+
+    function renderMatches(matches) {
+        const list = document.getElementById('matches-list');
+        list.innerHTML = matches.slice().reverse().map((m, i) => {
+            const realIdx = matches.length - 1 - i;
+            const date = new Date(m.date).toLocaleDateString();
+            return `
+                <tr>
+                    <td>${date}</td>
+                    <td>${m.spy}</td>
+                    <td><span style="color:${m.res === 'win' ? 'var(--spy)' : 'var(--success)'}">${m.res === 'win' ? 'Шпион выиграл' : 'Пойман'}</span></td>
+                    <td style="text-align:right"><button class="btn btn-danger" onclick="deleteItem('matches', ${realIdx})">Удалить</button></td>
+                </tr>
+            `;
+        }).join('');
+    }
+
+    async function addPlayer() {
+        const input = document.getElementById('new-player-name');
+        const name = input.value.trim();
+        if (!name) return;
+
+        const snap = await db.ref('/spy/teams').get();
+        let teams = snap.val() || [];
+        teams.push({ name: name });
+        await db.ref('/spy/teams').set(teams);
+        input.value = "";
+    }
+
+    async function deleteItem(path, idx) {
+        if (!confirm("Вы уверены? Это действие нельзя отменить.")) return;
+        const snap = await db.ref('/spy/' + path).get();
+        let items = snap.val() || [];
+        items.splice(idx, 1);
+        await db.ref('/spy/' + path).set(items);
+    }
+
+    async function factoryReset() {
+        if (confirm("ВНИМАНИЕ! Это удалит всех игроков и всю статистику навсегда. Вы действительно этого хотите?")) {
+            await db.ref('/spy').set({ teams: [], matches: [] });
+            alert("Данные обнулены.");
+        }
+    }
+</script>
+</body>
+</html>
