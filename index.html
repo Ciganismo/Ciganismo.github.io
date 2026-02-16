@@ -30,35 +30,41 @@
         }
         .menu-card {
             background: #1e293b; border-radius: 24px; padding: 40px; cursor: pointer;
-            transition: 0.3s; border: 1px solid rgba(255,255,255,0.1); position: relative; overflow: hidden;
+            transition: 0.3s; border: 1px solid rgba(255,255,255,0.1); position: relative;
         }
         .menu-card:hover { transform: translateY(-10px); border-color: var(--primary); box-shadow: 0 20px 40px rgba(0,0,0,0.4); }
         .menu-card h2 { font-size: 32px; margin: 15px 0 10px; }
-        .menu-card p { color: #94a3b8; font-size: 14px; }
         .icon { font-size: 50px; }
 
         /* ИГРОВОЙ ЭКРАН */
         #game-screen { display: none; padding: 20px; flex-direction: column; align-items: center; }
         .nav-bar { width: 100%; max-width: 1000px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
         
-        /* ТАБЛИЦА И ПАНЕЛЬ */
         .card { background: var(--card); border-radius: 24px; padding: 25px; width: 100%; max-width: 1000px; margin-bottom: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.05); }
+        
+        /* КНОПКА ЗАПУСКА ШПИОНА */
+        #spy-launch-box {
+            display: none; width: 100%; max-width: 1000px; margin-bottom: 20px;
+            background: linear-gradient(90deg, #f97316, #ea580c);
+            padding: 20px; border-radius: 20px; text-align: center;
+            box-shadow: 0 10px 20px rgba(249, 115, 22, 0.3);
+        }
+
         .toolbar { display: none; flex-direction: column; gap: 15px; margin-bottom: 20px; }
         .toolbar.active { display: flex; }
         .admin-row { display: flex; flex-wrap: wrap; gap: 10px; padding: 15px; background: rgba(0,0,0,0.2); border-radius: 15px; align-items: center; }
 
         table { width: 100%; border-collapse: separate; border-spacing: 0 8px; }
+        td { background: rgba(255,255,255,0.03); padding: 15px; text-align: center; border-radius: 12px; }
         th { color: #94a3b8; font-size: 11px; text-transform: uppercase; padding: 10px; }
-        td { background: rgba(255,255,255,0.03); padding: 15px; text-align: center; }
-        td:first-child { border-radius: 12px 0 0 12px; font-weight: 800; }
-        td:last-child { border-radius: 0 12px 12px 0; color: var(--primary); font-weight: 800; }
 
         input, select { background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); padding: 12px; border-radius: 10px; color: white; outline: none; }
-        .btn { border: none; padding: 12px 25px; border-radius: 12px; cursor: pointer; font-weight: 700; transition: 0.2s; }
+        .btn { border: none; padding: 12px 25px; border-radius: 12px; cursor: pointer; font-weight: 700; transition: 0.2s; text-decoration: none; display: inline-block; }
         .btn-primary { background: var(--primary); color: white; }
+        .btn-launch { background: white; color: #f97316; font-size: 18px; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
         .btn-back { background: rgba(255,255,255,0.1); color: white; }
 
-        #toast { visibility: hidden; position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); background: var(--primary); color: white; padding: 15px 30px; border-radius: 50px; z-index: 2000; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        #toast { visibility: hidden; position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); background: var(--primary); color: white; padding: 15px 30px; border-radius: 50px; z-index: 2000; }
         #toast.show { visibility: visible; animation: slideUp 0.4s; }
         @keyframes slideUp { from {bottom: 0; opacity:0;} to {bottom: 30px; opacity:1;} }
 
@@ -67,36 +73,42 @@
 </head>
 <body class="theme-football">
 
-<div id="toast">Сохранено</div>
+<div id="toast">Обновлено</div>
 
 <div id="main-menu">
     <h1 style="font-size: 50px; font-weight: 900; margin: 0;">Game<span style="color:var(--primary)">Hub</span></h1>
-    <p style="color: #94a3b8;">Выбери игру, чтобы открыть таблицу результатов</p>
+    <p style="color: #94a3b8;">Статистика и управление турнирами</p>
     
     <div class="menu-grid">
         <div class="menu-card" onclick="openGame('football')" style="--primary: #2563eb">
             <div class="icon">⚽</div>
             <h2>Футбол</h2>
-            <p>Лига чемпионов двора. 3 очка за победу.</p>
+            <p>Таблица и результаты матчей</p>
         </div>
         <div class="menu-card" onclick="openGame('billiard')" style="--primary: #10b981">
             <div class="icon">🎱</div>
             <h2>Бильярд</h2>
-            <p>Турнир мастеров кия. 1 очко за партию.</p>
+            <p>Учет партий и побед</p>
         </div>
         <div class="menu-card" onclick="openGame('spy')" style="--primary: #f97316">
             <div class="icon">🕵️</div>
             <h2>Шпион</h2>
-            <p>Ролевая дедукция. Очки за вычисление шпиона.</p>
+            <p>Статистика и запуск игры</p>
         </div>
     </div>
 </div>
 
 <div id="game-screen">
     <div class="nav-bar">
-        <button class="btn btn-back" onclick="goHome()">← В меню</button>
+        <button class="btn btn-back" onclick="goHome()">← На главную</button>
         <div id="game-title" style="font-size: 24px; font-weight: 800;">Футбол</div>
         <button id="authBtn" class="btn" style="background: rgba(255,255,255,0.1); color: white;" onclick="handleAuth()">Войти</button>
+    </div>
+
+    <div id="spy-launch-box">
+        <h3 style="margin: 0 0 15px 0; color: white;">Готовы начать раунд?</h3>
+        <a href="spy_game.html" class="btn btn-launch">🚀 ЗАПУСТИТЬ ИГРОВОЙ МОДУЛЬ</a>
+        <p style="margin: 10px 0 0 0; font-size: 12px; color: rgba(255,255,255,0.8);">Игроки подтянутся автоматически</p>
     </div>
 
     <div class="card">
@@ -109,21 +121,13 @@
                 <select id="t2"></select>
                 <button class="btn btn-primary" onclick="addMatch()">Записать матч</button>
             </div>
-            <div id="spy-tools" class="admin-row" style="display:none">
-                <select id="spy-select"></select>
-                <select id="spy-res">
-                    <option value="lose">Шпион пойман</option>
-                    <option value="win">Шпион выиграл</option>
-                </select>
-                <input type="text" id="spy-loc" placeholder="Локация">
-                <button class="btn btn-primary" onclick="addSpyRound()">Записать раунд</button>
-            </div>
             <div class="admin-row">
                 <input type="text" id="new-name" placeholder="Имя игрока/команды" style="flex:1">
-                <button class="btn" style="background: #10b981; color: white;" onclick="addTeam()">➕ Добавить</button>
+                <button class="btn" style="background: #10b981; color: white;" onclick="addTeam()">➕ Добавить участника</button>
             </div>
         </div>
 
+        <h2 id="table-label">Таблица лидеров</h2>
         <table>
             <thead id="table-head"></thead>
             <tbody id="table-body"></tbody>
@@ -166,7 +170,6 @@
         setTimeout(() => t.className = "", 3000);
     }
 
-    // НАВИГАЦИЯ
     function openGame(mode) {
         currentMode = mode;
         document.body.className = 'theme-' + mode;
@@ -174,8 +177,10 @@
         document.getElementById('game-screen').style.display = 'flex';
         document.getElementById('game-title').innerText = mode.toUpperCase();
         
+        // Показываем кнопку запуска игры только для Шпиона
+        document.getElementById('spy-launch-box').style.display = (mode === 'spy') ? 'block' : 'none';
+        // Прячем ввод матчей для шпиона (т.к. они идут из игрового модуля)
         document.getElementById('std-tools').style.display = (mode === 'spy') ? 'none' : 'flex';
-        document.getElementById('spy-tools').style.display = (mode === 'spy') ? 'flex' : 'none';
         
         initTableHead();
         loadData();
@@ -192,7 +197,7 @@
         if (currentMode === 'spy') {
             head.innerHTML = `<tr><th>№</th><th style="text-align:left">Игрок</th><th>Игр</th><th>Шпион</th><th>Побед</th><th>Очки</th></tr>`;
         } else {
-            head.innerHTML = `<tr><th>№</th><th style="text-align:left">Команда</th><th>И</th><th>В</th><th>Н</th><th>П</th><th>Мячи</th><th>Очки</th></tr>`;
+            head.innerHTML = `<tr><th>№</th><th style="text-align:left">Команда</th><th>И</th><th>В</th><th>Н</th><th>П</th><th>Очки</th></tr>`;
         }
     }
 
@@ -232,7 +237,6 @@
                 if(t1 && t2) {
                     t1.g++; t2.g++;
                     const s1 = parseInt(m.s1); const s2 = parseInt(m.s2);
-                    t1.gs += s1; t1.gc += s2; t2.gs += s2; t2.gc += s1;
                     if(s1 > s2) { t1.w++; t1.pts += (currentMode === 'football' ? 3 : 1); t2.p++; }
                     else if(s1 < s2) { t2.w++; t2.pts += (currentMode === 'football' ? 3 : 1); t1.p++; }
                     else { t1.n++; t2.n++; t1.pts += (currentMode === 'football' ? 1 : 0); t2.pts += (currentMode === 'football' ? 1 : 0); }
@@ -246,12 +250,15 @@
         document.getElementById('table-body').innerHTML = state.teams.map((t, i) => {
             const row = (currentMode === 'spy') 
                 ? `<td>${t.g}</td><td>${t.spyCount}</td><td>${t.spyWin}</td>`
-                : `<td>${t.g}</td><td>${t.w}</td><td>${t.n}</td><td>${t.p}</td><td>${t.gs}:${t.gc}</td>`;
+                : `<td>${t.g}</td><td>${t.w}</td><td>${t.n}</td><td>${t.p}</td>`;
             return `<tr><td>${i+1}</td><td style="text-align:left"><b>${t.name}</b></td>${row}<td>${t.pts}</td></tr>`;
         }).join('');
 
         const opts = state.teams.map(t => `<option value="${t.name}">${t.name}</option>`).join('');
-        document.getElementById('t1').innerHTML = document.getElementById('t2').innerHTML = document.getElementById('spy-select').innerHTML = opts;
+        const t1El = document.getElementById('t1');
+        const t2El = document.getElementById('t2');
+        if(t1El) t1El.innerHTML = opts;
+        if(t2El) t2El.innerHTML = opts;
         
         document.getElementById('history-list').innerHTML = state.matches.slice().reverse().map((m, i) => {
             const txt = (currentMode === 'spy') ? `🕵️ ${m.spy} - ${m.res === 'win' ? 'Выиграл' : 'Пойман'}` : `${m.t1} ${m.s1}:${m.s2} ${m.t2}`;
@@ -272,12 +279,6 @@
         state.matches.push({ t1: document.getElementById('t1').value, t2: document.getElementById('t2').value, s1: document.getElementById('s1').value, s2: document.getElementById('s2').value });
         await db.ref('/' + currentMode).set(state);
         notify("Матч записан!");
-    }
-
-    async function addSpyRound() {
-        state.matches.push({ spy: document.getElementById('spy-select').value, res: document.getElementById('spy-res').value, loc: document.getElementById('spy-loc').value });
-        await db.ref('/' + currentMode).set(state);
-        notify("Раунд сохранен!");
     }
 
     async function deleteMatch(i) {
