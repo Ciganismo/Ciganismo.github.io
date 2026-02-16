@@ -15,11 +15,16 @@
             text-decoration: none; color: white; transition: 0.3s;
         }
         .game-card:hover { transform: translateY(-3px); background: #2d3a4f; }
-        .user-profile { display: flex; align-items: center; gap: 10px; margin-bottom: 30px; background: #1e293b; padding: 10px; border-radius: 50px; }
-        .user-profile img { width: 40px; border-radius: 50%; }
+        .user-profile { display: flex; align-items: center; gap: 10px; margin-bottom: 30px; background: #1e293b; padding: 10px; border-radius: 50px; min-height: 40px; }
+        .user-profile img { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; }
+        #login-btn { 
+            background: var(--p); color: white; border: none; padding: 8px 20px; 
+            border-radius: 20px; cursor: pointer; font-weight: bold; width: 100%;
+        }
         nav { position: fixed; bottom: 0; left: 0; right: 0; background: #1e293b; display: flex; justify-content: space-around; padding: 15px; border-top: 1px solid #334155; }
         nav a { color: #64748b; text-decoration: none; font-size: 12px; text-align: center; }
         nav a.active { color: var(--p); }
+        h1 span { color: var(--p); }
     </style>
 </head>
 <body>
@@ -61,24 +66,54 @@
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
+    
     <script>
-        const firebaseConfig = { /* ВАШ КОНФИГ */ };
+        // Данные из вашего скриншота
+        const firebaseConfig = {
+            apiKey: "AIzaSyC77DjtldFSm-3VIWXQrhsCYL3hzdUU-8",
+            authDomain: "tabliz-baf06.firebaseapp.com",
+            databaseURL: "https://tabliz-baf06-default-rtdb.firebaseio.com",
+            projectId: "tabliz-baf06",
+            storageBucket: "tabliz-baf06.appspot.com",
+            messagingSenderId: "42955040155",
+            appId: "1:42955040155:web:f23b7cf6b27b6917c2ad3e",
+            measurementId: "G-LF1EL0QWP2"
+        };
+
+        // Инициализация
         firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth();
         const db = firebase.database();
 
-        function login() { auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()); }
+        // Функция входа
+        function login() {
+            const provider = new firebase.auth.GoogleAuthProvider();
+            auth.signInWithPopup(provider)
+                .then((result) => {
+                    console.log("Успешный вход:", result.user.displayName);
+                })
+                .catch((error) => {
+                    console.error("Ошибка входа:", error);
+                    alert("Не удалось войти: " + error.message);
+                });
+        }
 
+        // Следим за состоянием пользователя
         auth.onAuthStateChanged(user => {
             if (user) {
-                document.getElementById('auth-section').innerHTML = `<img src="${user.photoURL}"> <span>${user.displayName}</span>`;
+                // Обновляем шапку профиля
+                document.getElementById('auth-section').innerHTML = `
+                    <img src="${user.photoURL}" alt="avatar"> 
+                    <span>${user.displayName}</span>
+                `;
+                document.getElementById('stats-list').innerText = "Загрузка статистики...";
                 loadGlobalStats();
             }
         });
 
         function loadGlobalStats() {
-            // Загрузка статистики из профиля владельца (вашего)
-            // Здесь будет логика отображения вашей таблицы всем авторизованным друзьям
+            // Сюда добавим логику получения данных из Realtime Database
+            console.log("Загружаем статистику...");
         }
     </script>
 </body>
