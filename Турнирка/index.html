@@ -3,206 +3,83 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🕵️ Шпион: Анонимное голосование</title>
+    <title>GameHub | Меню</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
     <style>
-        :root { --spy: #f97316; --bg: #18181b; --card: #27272a; --text: #f4f4f5; }
-        body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); margin: 0; display: flex; flex-direction: column; align-items: center; min-height: 100vh; }
-        .container { width: 95%; max-width: 500px; padding: 20px; text-align: center; }
-        .card { background: var(--card); padding: 25px; border-radius: 24px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.05); }
-
-        .btn { border: none; padding: 15px; border-radius: 12px; cursor: pointer; font-weight: 700; transition: 0.2s; width: 100%; margin: 5px 0; font-family: inherit; }
-        .btn-spy { background: var(--spy); color: white; }
-        .btn-outline { background: rgba(255,255,255,0.1); color: white; }
-
-        .role-box { height: 100px; display: flex; align-items: center; justify-content: center; background: var(--spy); border-radius: 15px; margin: 20px 0; font-size: 24px; font-weight: 900; cursor: pointer; user-select: none; }
-
-        .vote-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 20px; }
-        .vote-item { background: rgba(255,255,255,0.05); padding: 15px; border-radius: 12px; border: 2px solid transparent; cursor: pointer; }
-        .vote-item.selected { border-color: var(--spy); background: rgba(249, 115, 22, 0.1); }
-
-        .hidden { display: none; }
-        #timer { font-size: 48px; font-weight: 900; color: var(--spy); margin: 20px 0; }
-        .voted-count { font-size: 12px; color: #94a3b8; margin-top: 5px; }
+        :root { --p: #6366f1; --bg: #0f172a; --card: #1e293b; --text: #f8fafc; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding-bottom: 80px; }
+        .container { padding: 20px; max-width: 600px; margin: 0 auto; }
+        .game-card {
+            background: var(--card); border-radius: 20px; padding: 20px; margin-bottom: 15px;
+            border: 1px solid rgba(255,255,255,0.05); display: flex; justify-content: space-between; align-items: center;
+            text-decoration: none; color: white; transition: 0.3s;
+        }
+        .game-card:hover { transform: translateY(-3px); background: #2d3a4f; }
+        .user-profile { display: flex; align-items: center; gap: 10px; margin-bottom: 30px; background: #1e293b; padding: 10px; border-radius: 50px; }
+        .user-profile img { width: 40px; border-radius: 50%; }
+        nav { position: fixed; bottom: 0; left: 0; right: 0; background: #1e293b; display: flex; justify-content: space-around; padding: 15px; border-top: 1px solid #334155; }
+        nav a { color: #64748b; text-decoration: none; font-size: 12px; text-align: center; }
+        nav a.active { color: var(--p); }
     </style>
 </head>
 <body>
+    <div class="container">
+        <div id="auth-section" class="user-profile">
+            <button onclick="login()" id="login-btn">Войти через Google</button>
+        </div>
 
-<div class="container">
-    <h1 style="color: var(--spy)">SPYFALL 2.0</h1>
+        <h1>Выберите <span>Игру</span></h1>
 
-    <div id="screen-setup" class="card">
-        <p>Игроки подтянуты из базы. Начни игру, чтобы раздать роли.</p>
-        <div id="players-preview" style="margin-bottom: 20px; font-size: 14px; opacity: 0.7;"></div>
-        <button class="btn btn-spy" onclick="serverStart()">НАЧАТЬ НОВУЮ ИГРУ</button>
+        <a href="spy_game.html" class="game-card">
+            <div>
+                <h3 style="margin:0">🕵️ Шпион</h3>
+                <small style="color:#94a3b8">Поиск предателя</small>
+            </div>
+            <span>→</span>
+        </a>
+
+        <a href="other_game.html" class="game-card">
+            <div>
+                <h3 style="margin:0">🃏 Другая игра</h3>
+                <small style="color:#94a3b8">Статистика для карт/настолок</small>
+            </div>
+            <span>→</span>
+        </a>
+
+        <div id="leaderboard-section">
+            <h2>🏆 Топ игроков</h2>
+            <div class="game-card" style="display:block" id="stats-list">Войдите, чтобы увидеть статистику</div>
+        </div>
     </div>
 
-    <div id="screen-roles" class="card hidden">
-        <h3>Ваша роль</h3>
-        <p>Зажми блок ниже, чтобы увидеть секрет</p>
-        <div class="role-box" onmousedown="showRole()" onmouseup="hideRole()" ontouchstart="showRole()" ontouchend="hideRole()">УДЕРЖИВАТЬ</div>
-        <p id="role-player-name" style="opacity: 0.5"></p>
-        <button class="btn btn-outline" onclick="goToTimer()">ВСЕ УВИДЕЛИ РОЛИ →</button>
-    </div>
+    <nav>
+        <a href="index.html" class="active">🏠<br>Меню</a>
+        <a href="chat.html">💬<br>Чат</a>
+        <a href="admin.html">⚙️<br>Настройки</a>
+    </nav>
 
-    <div id="screen-timer" class="card hidden">
-        <div id="timer">05:00</div>
-        <button class="btn btn-spy" onclick="serverStartVote()">ПЕРЕЙТИ К ГОЛОСОВАНИЮ</button>
-    </div>
+    <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
+    <script>
+        const firebaseConfig = { /* ВАШ КОНФИГ */ };
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.database();
 
-    <div id="screen-vote" class="card hidden">
-        <h3>КТО ШПИОН?</h3>
-        <p>Голосуй анонимно. Результаты появятся в конце.</p>
-        <div id="vote-options" class="vote-grid"></div>
-        <div id="vote-status" class="voted-count">Проголосовало: 0 / 0</div>
-    </div>
+        function login() { auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()); }
 
-    <div id="screen-results" class="card hidden">
-        <h2 id="result-title">Итоги</h2>
-        <p id="result-desc"></p>
-        <button class="btn btn-spy" onclick="location.reload()">В МЕНЮ</button>
-    </div>
-</div>
-
-<script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
-
-<script>
-    const firebaseConfig = {
-        apiKey: "AIzaSyC77DjtldFSm-3VIWXQrHsCYL3hzjdUU-8",
-        authDomain: "tabliz-baf06.firebaseapp.com",
-        databaseURL: "https://tabliz-baf06-default-rtdb.firebaseio.com",
-        projectId: "tabliz-baf06",
-        storageBucket: "tabliz-baf06.firebasestorage.app",
-        messagingSenderId: "42955040155",
-        appId: "1:42955040155:web:f23b7cf6b27b6917c2ad3e",
-    };
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.database();
-
-    let myName = prompt("Введите ваше имя (как в таблице):") || "Гость";
-    let gameState = {};
-    const locations = ["Банк", "Казино", "Полярная станция", "Отель", "Самолет", "Пиратский корабль"];
-
-    // Подписка на состояние игры
-    db.ref('/spy/active_game').on('value', (snap) => {
-        gameState = snap.val();
-        if (!gameState) return;
-        renderScreen();
-    });
-
-    function serverStart() {
-        db.ref('/spy/teams').once('value', (snap) => {
-            const teams = snap.val() || [];
-            const playerNames = teams.map(t => t.name);
-            if(playerNames.length < 3) return alert("Мало игроков в базе!");
-
-            const spy = playerNames[Math.floor(Math.random() * playerNames.length)];
-            const loc = locations[Math.floor(Math.random() * locations.length)];
-
-            db.ref('/spy/active_game').set({
-                phase: 'roles',
-                players: playerNames,
-                spy: spy,
-                location: loc,
-                votes: {},
-                startTime: Date.now()
-            });
-        });
-    }
-
-    function renderScreen() {
-        // Прячем все
-        document.querySelectorAll('.card').forEach(c => c.classList.add('hidden'));
-
-        if (gameState.phase === 'roles') {
-            document.getElementById('screen-roles').classList.remove('hidden');
-            document.getElementById('role-player-name').innerText = "Игрок: " + myName;
-        } else if (gameState.phase === 'timer') {
-            document.getElementById('screen-timer').classList.remove('hidden');
-            updateTimerDisplay();
-        } else if (gameState.phase === 'vote') {
-            document.getElementById('screen-vote').classList.remove('hidden');
-            renderVoteOptions();
-        } else if (gameState.phase === 'results') {
-            document.getElementById('screen-results').classList.remove('hidden');
-            showFinalResults();
-        }
-    }
-
-    function showRole() {
-        const box = document.querySelector('.role-box');
-        box.innerText = (myName === gameState.spy) ? "ТЫ ШПИОН! 🕵️" : gameState.location;
-    }
-
-    function hideRole() {
-        document.querySelector('.role-box').innerText = "УДЕРЖИВАТЬ";
-    }
-
-    function goToTimer() {
-        db.ref('/spy/active_game/phase').set('timer');
-    }
-
-    function serverStartVote() {
-        db.ref('/spy/active_game/phase').set('vote');
-    }
-
-    function renderVoteOptions() {
-        const container = document.getElementById('vote-options');
-        const votedCount = gameState.votes ? Object.keys(gameState.votes).length : 0;
-        document.getElementById('vote-status').innerText = `Проголосовало: ${votedCount} / ${gameState.players.length}`;
-
-        if (gameState.votes && gameState.votes[myName]) {
-            container.innerHTML = "<p>Ваш голос принят. Ждем остальных...</p>";
-            if (votedCount >= gameState.players.length) {
-                db.ref('/spy/active_game/phase').set('results');
+        auth.onAuthStateChanged(user => {
+            if (user) {
+                document.getElementById('auth-section').innerHTML = `<img src="${user.photoURL}"> <span>${user.displayName}</span>`;
+                loadGlobalStats();
             }
-            return;
+        });
+
+        function loadGlobalStats() {
+            // Загрузка статистики из профиля владельца (вашего)
+            // Здесь будет логика отображения вашей таблицы всем авторизованным друзьям
         }
-
-        container.innerHTML = gameState.players.map(p =>
-            `<div class="vote-item" onclick="castVote('${p}')">${p}</div>`
-        ).join('');
-    }
-
-    async function castVote(target) {
-        await db.ref(`/spy/active_game/votes/${myName}`).set(target);
-    }
-
-    function showFinalResults() {
-        const votes = gameState.votes || {};
-        const counts = {};
-        Object.values(votes).forEach(v => counts[v] = (counts[v] || 0) + 1);
-
-        let maxVotes = 0;
-        let accused = "Никто";
-        for (let p in counts) {
-            if (counts[p] > maxVotes) { maxVotes = counts[p]; accused = p; }
-        }
-
-        const isSuccess = (accused === gameState.spy);
-        document.getElementById('result-title').innerText = isSuccess ? "ШПИОН ПОЙМАН!" : "ШПИОН ПОБЕДИЛ!";
-        document.getElementById('result-desc').innerText = `Большинство проголосовало за ${accused}. Шпионом был: ${gameState.spy}`;
-
-        // Только один игрок (админ) записывает в общую статистику
-        if (myName === gameState.players[0]) {
-            saveToStats(isSuccess ? 'lose' : 'win');
-        }
-    }
-
-    async function saveToStats(res) {
-        const snap = await db.ref('/spy/matches').get();
-        let matches = snap.val() || [];
-        if (matches.length > 0 && matches[matches.length-1].time === gameState.startTime) return;
-
-        matches.push({ spy: gameState.spy, res: res, loc: gameState.location, time: gameState.startTime });
-        await db.ref('/spy/matches').set(matches);
-    }
-
-    function updateTimerDisplay() {
-        // Упрощенный таймер для примера
-        document.getElementById('timer').innerText = "ИДЕТ ОБСУЖДЕНИЕ";
-    }
-</script>
+    </script>
 </body>
 </html>
