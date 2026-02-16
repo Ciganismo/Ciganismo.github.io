@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>🏆 Tournament Pro: Google Auth</title>
+    <title>🏆 Tournament Pro: Fixed Edition</title>
     <style>
         :root { --p: #2563eb; --s: #16a34a; --d: #dc2626; --dark: #1e293b; --bg: #f1f5f9; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; padding-bottom: 50px; display: flex; flex-direction: column; align-items: center; }
@@ -33,7 +33,7 @@
     <div class="admin-content">
         <div>
             <strong>🏆 Tournament Pro</strong>
-            <div id="authStatus">Загрузка...</div>
+            <div id="authStatus">Синхронизация...</div>
         </div>
         <button id="modeBtn" class="btn btn-google" onclick="handleAuthClick()">
             <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width="18">
@@ -83,7 +83,6 @@
 <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
 
 <script>
-    // Конфигурация из твоего скриншота
     const firebaseConfig = {
         apiKey: "AIzaSyC77DjtldFSm-3VIWXQrHsCYL3hzjdUU-8",
         authDomain: "tabliz-baf06.firebaseapp.com",
@@ -103,7 +102,6 @@
     let state = { teams: [], matches: [] };
     let isEditMode = false;
 
-    // Следим за входом
     auth.onAuthStateChanged(user => {
         const toolbar = document.getElementById('toolbar');
         const modeBtn = document.getElementById('modeBtn');
@@ -125,12 +123,17 @@
         renderAll();
     });
 
-    // Загрузка данных
     database.ref('/').on('value', (snapshot) => {
         const data = snapshot.val();
         if (data) {
-            state.teams = data.teams || [];
-            state.matches = data.matches || [];
+            // Поддержка и старого массива, и нового объекта
+            if (Array.isArray(data)) {
+                state.teams = data;
+                state.matches = [];
+            } else {
+                state.teams = data.teams || [];
+                state.matches = data.matches || [];
+            }
             recalculateTable();
             renderAll();
         }
@@ -141,10 +144,8 @@
             await auth.signOut();
         } else {
             try {
-                // Это откроет окно Google
                 await auth.signInWithPopup(provider);
             } catch (e) {
-                console.error(e);
                 alert("Ошибка: " + e.message);
             }
         }
@@ -157,8 +158,10 @@
             const t2 = state.teams.find(t => t.name === m.t2);
             if (t1 && t2) {
                 t1.g++; t2.g++;
-                if (m.s1 > m.s2) { t1.w++; t1.pts += 3; t2.p++; }
-                else if (m.s1 < m.s2) { t2.w++; t2.pts += 3; t1.p++; }
+                const s1 = parseInt(m.s1);
+                const s2 = parseInt(m.s2);
+                if (s1 > s2) { t1.w++; t1.pts += 3; t2.p++; }
+                else if (s1 < s2) { t2.w++; t2.pts += 3; t1.p++; }
                 else { t1.n++; t2.n++; t1.pts += 1; t2.pts += 1; }
             }
         });
@@ -166,32 +169,41 @@
     }
 
     function renderAll() {
-        document.getElementById('tableBody').innerHTML = state.teams.map((t, i) => `
-            <tr>
-                <td>${i+1}</td>
-                <td style="text-align:left; font-weight:600">${t.name}</td>
-                <td>${t.g}</td><td>${t.w}</td><td>${t.n}</td><td>${t.p}</td>
-                <td style="color:var(--p); font-weight:bold">${t.pts}</td>
-            </tr>
-        `).join('');
+        const tbody = document.getElementById('tableBody');
+        if (tbody) {
+            tbody.innerHTML = state.teams.map((t, i) => `
+                <tr>
+                    <td>${i+1}</td>
+                    <td style="text-align:left; font-weight:600">${t.name}</td>
+                    <td>${t.g}</td><td>${t.w}</td><td>${t.n}</td><td>${t.p}</td>
+                    <td style="color:var(--p); font-weight:bold">${t.pts}</td>
+                </tr>
+            `).join('');
+        }
 
-        document.getElementById('matchHistory').innerHTML = state.matches.slice().reverse().map((m, i) => `
-            <div class="history-item">
-                <span>${m.t1} <b>${m.s1} : ${m.s2}</b> ${m.t2}</span>
-                ${isEditMode ? `<button class="del-match" onclick="deleteMatch(${state.matches.length - 1 - i})">🗑️</button>` : ''}
-            </div>
-        `).join('');
+        const historyDiv = document.getElementById('matchHistory');
+        if (historyDiv) {
+            historyDiv.innerHTML = state.matches.slice().reverse().map((m, i) => `
+                <div class="history-item">
+                    <span>${m.t1} <b>${m.s1} : ${m.s2}</b> ${m.t2}</span>
+                    ${isEditMode ? `<button class="del-match" onclick="deleteMatch(${state.matches.length - 1 - i})">🗑️</button>` : ''}
+                </div>
+            `).join('');
+        }
 
-        const opts = state.teams.map(t => `<option value="${t.name}">${t.name}</option>`).join('');
-        document.getElementById('team1Select').innerHTML = opts;
-        document.getElementById('team2Select').innerHTML = opts;
+        const s1 = document.getElementById('team1Select');
+        const s2 = document.getElementById('team2Select');
+        if (s1 && s2) {
+            const opts = state.teams.map(t => `<option value="${t.name}">${t.name}</option>`).join('');
+            s1.innerHTML = s2.innerHTML = opts || '<option disabled>Добавьте команды</option>';
+        }
     }
 
     function addMatch() {
         const t1 = document.getElementById('team1Select').value;
         const t2 = document.getElementById('team2Select').value;
-        const s1 = parseInt(document.getElementById('score1').value) || 0;
-        const s2 = parseInt(document.getElementById('score2').value) || 0;
+        const s1 = document.getElementById('score1').value;
+        const s2 = document.getElementById('score2').value;
         if (t1 === t2) return alert("Выберите разные команды!");
         state.matches.push({ t1, t2, s1, s2 });
         recalculateTable();
@@ -218,7 +230,7 @@
         if (!auth.currentUser) return alert("Войдите в систему!");
         try {
             await database.ref('/').set(state);
-            alert("✅ Сохранено!");
+            alert("✅ Данные в облаке обновлены!");
         } catch (e) {
             alert("Ошибка сохранения: " + e.message);
         }
