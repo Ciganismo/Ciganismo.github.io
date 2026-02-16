@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🕵️ Шпион: Анонимное голосование</title>
+    <title>🕵️ Шпион: Одна трубка на всех</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
     <style>
         :root { --spy: #f97316; --bg: #18181b; --card: #27272a; --text: #f4f4f5; }
@@ -11,56 +11,56 @@
         .container { width: 95%; max-width: 500px; padding: 20px; text-align: center; }
         .card { background: var(--card); padding: 25px; border-radius: 24px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.05); }
         
-        .btn { border: none; padding: 15px; border-radius: 12px; cursor: pointer; font-weight: 700; transition: 0.2s; width: 100%; margin: 5px 0; font-family: inherit; }
+        .btn { border: none; padding: 15px; border-radius: 12px; cursor: pointer; font-weight: 700; transition: 0.2s; width: 100%; margin: 8px 0; font-family: inherit; font-size: 16px; }
         .btn-spy { background: var(--spy); color: white; }
         .btn-outline { background: rgba(255,255,255,0.1); color: white; }
         
-        .role-box { height: 100px; display: flex; align-items: center; justify-content: center; background: var(--spy); border-radius: 15px; margin: 20px 0; font-size: 24px; font-weight: 900; cursor: pointer; user-select: none; }
+        .role-viewer { height: 120px; display: flex; align-items: center; justify-content: center; background: var(--spy); border-radius: 15px; margin: 20px 0; font-size: 22px; font-weight: 900; cursor: pointer; user-select: none; border: 4px dashed rgba(255,255,255,0.3); }
         
-        .vote-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 20px; }
-        .vote-item { background: rgba(255,255,255,0.05); padding: 15px; border-radius: 12px; border: 2px solid transparent; cursor: pointer; }
-        .vote-item.selected { border-color: var(--spy); background: rgba(249, 115, 22, 0.1); }
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px; }
+        .item { background: rgba(255,255,255,0.05); padding: 15px; border-radius: 12px; cursor: pointer; border: 2px solid transparent; }
+        .item:active { background: var(--spy); }
         
         .hidden { display: none; }
-        #timer { font-size: 48px; font-weight: 900; color: var(--spy); margin: 20px 0; }
-        .voted-count { font-size: 12px; color: #94a3b8; margin-top: 5px; }
+        #timer { font-size: 50px; font-weight: 900; color: var(--spy); margin: 20px 0; }
+        .step-info { color: #94a3b8; margin-bottom: 20px; font-size: 14px; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h1 style="color: var(--spy)">SPYFALL 2.0</h1>
+    <h1 style="color: var(--spy)">SPYFALL GAME</h1>
 
-    <div id="screen-setup" class="card">
-        <p>Игроки подтянуты из базы. Начни игру, чтобы раздать роли.</p>
-        <div id="players-preview" style="margin-bottom: 20px; font-size: 14px; opacity: 0.7;"></div>
-        <button class="btn btn-spy" onclick="serverStart()">НАЧАТЬ НОВУЮ ИГРУ</button>
+    <div id="sc-setup" class="card">
+        <h3>Новая партия</h3>
+        <p class="step-info">Имена подтянуты из базы данных</p>
+        <div id="player-list-preview" style="margin-bottom: 20px; opacity: 0.6"></div>
+        <button class="btn btn-spy" onclick="prepareGame()">НАЧАТЬ РАСПРЕДЕЛЕНИЕ</button>
     </div>
 
-    <div id="screen-roles" class="card hidden">
-        <h3>Ваша роль</h3>
-        <p>Зажми блок ниже, чтобы увидеть секрет</p>
-        <div class="role-box" onmousedown="showRole()" onmouseup="hideRole()" ontouchstart="showRole()" ontouchend="hideRole()">УДЕРЖИВАТЬ</div>
-        <p id="role-player-name" style="opacity: 0.5"></p>
-        <button class="btn btn-outline" onclick="goToTimer()">ВСЕ УВИДЕЛИ РОЛИ →</button>
+    <div id="sc-roles" class="card hidden">
+        <h3 id="current-player-name">Игрок...</h3>
+        <p class="step-info">Зажми оранжевый блок, чтобы увидеть секрет. <br>Отпусти и передай телефон следующему.</p>
+        <div class="role-viewer" onmousedown="showR()" onmouseup="hideR()" ontouchstart="showR()" ontouchend="hideR()">УДЕРЖИВАЙ</div>
+        <button id="btn-next-role" class="btn btn-outline hidden" onclick="nextP()">СЛЕДУЮЩИЙ ИГРОК</button>
     </div>
 
-    <div id="screen-timer" class="card hidden">
-        <div id="timer">05:00</div>
-        <button class="btn btn-spy" onclick="serverStartVote()">ПЕРЕЙТИ К ГОЛОСОВАНИЮ</button>
+    <div id="sc-timer" class="card hidden">
+        <div id="timer-val">05:00</div>
+        <p>Обсуждайте! Кто ведет себя подозрительно?</p>
+        <button class="btn btn-spy" onclick="startVoting()">К ГОЛОСОВАНИЮ</button>
     </div>
 
-    <div id="screen-vote" class="card hidden">
-        <h3>КТО ШПИОН?</h3>
-        <p>Голосуй анонимно. Результаты появятся в конце.</p>
-        <div id="vote-options" class="vote-grid"></div>
-        <div id="vote-status" class="voted-count">Проголосовало: 0 / 0</div>
+    <div id="sc-vote" class="card hidden">
+        <h3 id="voter-name">Кто голосует?</h3>
+        <p class="step-info">Нажми на того, кого считаешь шпионом. Твой выбор будет скрыт.</p>
+        <div id="vote-grid" class="grid"></div>
     </div>
 
-    <div id="screen-results" class="card hidden">
-        <h2 id="result-title">Итоги</h2>
-        <p id="result-desc"></p>
-        <button class="btn btn-spy" onclick="location.reload()">В МЕНЮ</button>
+    <div id="sc-results" class="card hidden">
+        <h2 id="res-title">Итоги</h2>
+        <div id="res-stats" style="margin: 20px 0; line-height: 1.6;"></div>
+        <button class="btn btn-spy" onclick="saveAndExit()">ЗАПИСАТЬ В ТАБЛИЦУ И ВЫЙТИ</button>
     </div>
 </div>
 
@@ -80,128 +80,128 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    let myName = prompt("Введите ваше имя (как в таблице):") || "Гость";
-    let gameState = {};
-    const locations = ["Банк", "Казино", "Полярная станция", "Отель", "Самолет", "Пиратский корабль"];
+    const locations = ["Банк", "Казино", "Цирк Шапито", "Орбитальная станция", "Пиратское судно", "Полицейский участок", "Ресторан", "Супермаркет"];
+    
+    let state = {
+        players: [],
+        spy: '',
+        loc: '',
+        idx: 0,
+        votes: {}
+    };
 
-    // Подписка на состояние игры
-    db.ref('/spy/active_game').on('value', (snap) => {
-        gameState = snap.val();
-        if (!gameState) return;
-        renderScreen();
+    // Загрузка игроков из базы
+    db.ref('/spy/teams').once('value', (s) => {
+        const teams = s.val() || [];
+        state.players = teams.map(t => t.name);
+        document.getElementById('player-list-preview').innerText = state.players.join(', ');
     });
 
-    function serverStart() {
-        db.ref('/spy/teams').once('value', (snap) => {
-            const teams = snap.val() || [];
-            const playerNames = teams.map(t => t.name);
-            if(playerNames.length < 3) return alert("Мало игроков в базе!");
-
-            const spy = playerNames[Math.floor(Math.random() * playerNames.length)];
-            const loc = locations[Math.floor(Math.random() * locations.length)];
-
-            db.ref('/spy/active_game').set({
-                phase: 'roles',
-                players: playerNames,
-                spy: spy,
-                location: loc,
-                votes: {},
-                startTime: Date.now()
-            });
-        });
+    function prepareGame() {
+        if(state.players.length < 3) return alert("Добавьте игроков в главном меню!");
+        state.spy = state.players[Math.floor(Math.random() * state.players.length)];
+        state.loc = locations[Math.floor(Math.random() * locations.length)];
+        state.idx = 0;
+        state.votes = {};
+        showScreen('sc-roles');
+        updateRoleView();
     }
 
-    function renderScreen() {
-        // Прячем все
-        document.querySelectorAll('.card').forEach(c => c.classList.add('hidden'));
-        
-        if (gameState.phase === 'roles') {
-            document.getElementById('screen-roles').classList.remove('hidden');
-            document.getElementById('role-player-name').innerText = "Игрок: " + myName;
-        } else if (gameState.phase === 'timer') {
-            document.getElementById('screen-timer').classList.remove('hidden');
-            updateTimerDisplay();
-        } else if (gameState.phase === 'vote') {
-            document.getElementById('screen-vote').classList.remove('hidden');
-            renderVoteOptions();
-        } else if (gameState.phase === 'results') {
-            document.getElementById('screen-results').classList.remove('hidden');
-            showFinalResults();
+    function updateRoleView() {
+        document.getElementById('current-player-name').innerText = "Очередь: " + state.players[state.idx];
+        document.getElementById('btn-next-role').classList.add('hidden');
+    }
+
+    function showR() {
+        const viewer = document.querySelector('.role-viewer');
+        const p = state.players[state.idx];
+        viewer.innerText = (p === state.spy) ? "ТЫ ШПИОН! 🕵️" : state.loc;
+        viewer.style.background = "#ea580c";
+        document.getElementById('btn-next-role').classList.remove('hidden');
+    }
+
+    function hideR() {
+        document.querySelector('.role-viewer').innerText = "УДЕРЖИВАЙ";
+        document.querySelector('.role-viewer').style.background = "var(--spy)";
+    }
+
+    function nextP() {
+        state.idx++;
+        if(state.idx >= state.players.length) {
+            showScreen('sc-timer');
+            runTimer();
+        } else {
+            updateRoleView();
+            hideR();
         }
     }
 
-    function showRole() {
-        const box = document.querySelector('.role-box');
-        box.innerText = (myName === gameState.spy) ? "ТЫ ШПИОН! 🕵️" : gameState.location;
+    function runTimer() {
+        let t = 300;
+        const el = document.getElementById('timer-val');
+        const intrvl = setInterval(() => {
+            let m = Math.floor(t / 60);
+            let s = t % 60;
+            el.innerText = `${m}:${s < 10 ? '0' : ''}${s}`;
+            if(t <= 0 || document.getElementById('sc-timer').classList.contains('hidden')) clearInterval(intrvl);
+            t--;
+        }, 1000);
     }
 
-    function hideRole() {
-        document.querySelector('.role-box').innerText = "УДЕРЖИВАТЬ";
+    function startVoting() {
+        state.idx = 0;
+        showScreen('sc-vote');
+        updateVoteView();
     }
 
-    function goToTimer() {
-        db.ref('/spy/active_game/phase').set('timer');
+    function updateVoteView() {
+        document.getElementById('voter-name').innerText = "Голосует: " + state.players[state.idx];
+        const grid = document.getElementById('vote-grid');
+        grid.innerHTML = state.players.map(p => `
+            <div class="item" onclick="confirmVote('${p}')">${p}</div>
+        `).join('');
     }
 
-    function serverStartVote() {
-        db.ref('/spy/active_game/phase').set('vote');
-    }
-
-    function renderVoteOptions() {
-        const container = document.getElementById('vote-options');
-        const votedCount = gameState.votes ? Object.keys(gameState.votes).length : 0;
-        document.getElementById('vote-status').innerText = `Проголосовало: ${votedCount} / ${gameState.players.length}`;
-
-        if (gameState.votes && gameState.votes[myName]) {
-            container.innerHTML = "<p>Ваш голос принят. Ждем остальных...</p>";
-            if (votedCount >= gameState.players.length) {
-                db.ref('/spy/active_game/phase').set('results');
-            }
-            return;
+    function confirmVote(target) {
+        state.votes[state.players[state.idx]] = target;
+        state.idx++;
+        if(state.idx >= state.players.length) {
+            showResults();
+        } else {
+            alert("Ваш голос принят! Передайте телефон: " + state.players[state.idx]);
+            updateVoteView();
         }
-
-        container.innerHTML = gameState.players.map(p => 
-            `<div class="vote-item" onclick="castVote('${p}')">${p}</div>`
-        ).join('');
     }
 
-    async function castVote(target) {
-        await db.ref(`/spy/active_game/votes/${myName}`).set(target);
-    }
-
-    function showFinalResults() {
-        const votes = gameState.votes || {};
+    function showResults() {
+        showScreen('sc-results');
         const counts = {};
-        Object.values(votes).forEach(v => counts[v] = (counts[v] || 0) + 1);
+        Object.values(state.votes).forEach(v => counts[v] = (counts[v] || 0) + 1);
 
-        let maxVotes = 0;
-        let accused = "Никто";
-        for (let p in counts) {
-            if (counts[p] > maxVotes) { maxVotes = counts[p]; accused = p; }
-        }
+        let max = 0; let accused = "";
+        for(let p in counts) { if(counts[p] > max) { max = counts[p]; accused = p; } }
 
-        const isSuccess = (accused === gameState.spy);
-        document.getElementById('result-title').innerText = isSuccess ? "ШПИОН ПОЙМАН!" : "ШПИОН ПОБЕДИЛ!";
-        document.getElementById('result-desc').innerText = `Большинство проголосовало за ${accused}. Шпионом был: ${gameState.spy}`;
-
-        // Только один игрок (админ) записывает в общую статистику
-        if (myName === gameState.players[0]) {
-            saveToStats(isSuccess ? 'lose' : 'win');
-        }
+        const win = (accused === state.spy);
+        document.getElementById('res-title').innerText = win ? "ПОБЕДА ЖИТЕЛЕЙ!" : "ПОБЕДА ШПИОНА!";
+        
+        let log = `<b>Шпионом был:</b> ${state.spy}<br><b>Изгнали:</b> ${accused}<br><br><b>Голоса:</b><br>`;
+        for(let v in state.votes) { log += `${v} → ${state.votes[v]}<br>`; }
+        
+        document.getElementById('res-stats').innerHTML = log;
+        state.finalRes = win ? 'lose' : 'win'; // 'lose' для шпиона = победа жителей
     }
 
-    async function saveToStats(res) {
+    async function saveAndExit() {
         const snap = await db.ref('/spy/matches').get();
         let matches = snap.val() || [];
-        if (matches.length > 0 && matches[matches.length-1].time === gameState.startTime) return; 
-
-        matches.push({ spy: gameState.spy, res: res, loc: gameState.location, time: gameState.startTime });
+        matches.push({ spy: state.spy, res: state.finalRes, loc: state.loc, date: new Date().toLocaleString() });
         await db.ref('/spy/matches').set(matches);
+        window.location.href = "index.html";
     }
 
-    function updateTimerDisplay() {
-        // Упрощенный таймер для примера
-        document.getElementById('timer').innerText = "ИДЕТ ОБСУЖДЕНИЕ";
+    function showScreen(id) {
+        document.querySelectorAll('.card').forEach(c => c.classList.add('hidden'));
+        document.getElementById(id).classList.remove('hidden');
     }
 </script>
 </body>
