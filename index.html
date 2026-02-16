@@ -3,74 +3,89 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GameHub: Ultimate Edition</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;900&display=swap" rel="stylesheet">
+    <title>SpyGame Hub | Статистика</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&display=swap" rel="stylesheet">
     <style>
-        :root { --primary: #6366f1; --bg: #0f172a; --card: #1e293b; --text: #f8fafc; }
-        .theme-football { --primary: #2563eb; --bg: #0f172a; --card: #1e293b; }
-        .theme-billiard { --primary: #10b981; --bg: #022c22; --card: #064e3b; }
-        .theme-spy { --primary: #f97316; --bg: #18181b; --card: #27272a; }
-
-        body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); margin: 0; transition: 0.5s; }
-        #main-menu { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; text-align: center; }
-        .menu-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; width: 90%; max-width: 1000px; margin-top: 30px; }
-        .menu-card { background: var(--card); border-radius: 24px; padding: 30px; cursor: pointer; border: 1px solid rgba(255,255,255,0.1); transition: 0.3s; }
-        .menu-card:hover { transform: translateY(-10px); border-color: var(--primary); }
-
-        #game-screen { display: none; padding: 20px; flex-direction: column; align-items: center; }
-        .nav-bar { width: 100%; max-width: 1000px; display: flex; justify-content: space-between; margin-bottom: 20px; }
-        .card { background: var(--card); border-radius: 20px; padding: 20px; width: 100%; max-width: 1000px; margin-bottom: 20px; border: 1px solid rgba(255,255,255,0.05); }
+        :root { --spy: #f97316; --bg: #0f172a; --card: #1e293b; --text: #f8fafc; }
+        body { 
+            font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); 
+            margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; 
+        }
+        .container { width: 100%; max-width: 600px; }
         
-        .spy-banner { display: none; background: linear-gradient(90deg, #f97316, #ea580c); padding: 20px; border-radius: 15px; margin-bottom: 20px; text-align: center; width: 100%; max-width: 1000px; box-sizing: border-box; }
-        .btn-launch { background: white; color: #f97316; padding: 12px 25px; border-radius: 10px; text-decoration: none; font-weight: 800; display: inline-block; }
+        /* Header */
+        header { text-align: center; margin-bottom: 30px; }
+        header h1 { font-size: 40px; font-weight: 900; margin: 0; letter-spacing: -1px; }
+        header span { color: var(--spy); }
 
-        table { width: 100%; border-collapse: separate; border-spacing: 0 8px; }
-        td { background: rgba(255,255,255,0.03); padding: 12px; text-align: center; border-radius: 8px; }
-        
-        .toolbar { display: none; gap: 10px; flex-wrap: wrap; margin-bottom: 20px; }
-        .toolbar.active { display: flex; }
-        input, select { background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); padding: 10px; border-radius: 8px; color: white; }
-        .btn { border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: 700; color: white; }
+        /* Banner */
+        .play-banner { 
+            background: linear-gradient(135deg, #f97316, #ea580c); 
+            padding: 25px; border-radius: 24px; text-align: center; margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(249, 115, 22, 0.3);
+        }
+        .play-banner h2 { margin: 0 0 15px 0; font-weight: 800; }
+        .btn-play { 
+            background: white; color: var(--spy); padding: 12px 30px; 
+            border-radius: 12px; text-decoration: none; font-weight: 800; display: inline-block;
+            transition: 0.3s;
+        }
+        .btn-play:hover { transform: scale(1.05); }
+
+        /* Leaderboard */
+        .card { 
+            background: var(--card); border-radius: 24px; padding: 20px; 
+            border: 1px solid rgba(255,255,255,0.05); box-shadow: 0 4px 20px rgba(0,0,0,0.2); 
+        }
+        table { width: 100%; border-collapse: collapse; }
+        th { text-align: left; color: #94a3b8; font-size: 12px; text-transform: uppercase; padding: 15px 10px; }
+        td { padding: 15px 10px; border-top: 1px solid rgba(255,255,255,0.05); }
+        .rank { font-weight: 900; color: var(--spy); width: 30px; }
+        .name { font-weight: 600; }
+        .pts { font-weight: 800; text-align: right; }
+        .games { color: #94a3b8; font-size: 13px; text-align: center; }
+
+        /* Admin Section */
+        footer { margin-top: 40px; text-align: center; }
+        #admin-link { 
+            display: none; background: #6366f1; color: white; padding: 10px 20px; 
+            border-radius: 10px; text-decoration: none; font-weight: 700; margin-bottom: 10px;
+        }
+        .auth-small { background: none; border: none; color: #334155; font-size: 11px; cursor: pointer; }
     </style>
 </head>
 <body>
 
-<div id="main-menu">
-    <h1>Game<span style="color:var(--primary)">Hub</span></h1>
-    <div class="menu-grid">
-        <div class="menu-card" onclick="openGame('football')"><h2>⚽ Футбол</h2></div>
-        <div class="menu-card" onclick="openGame('billiard')"><h2>🎱 Бильярд</h2></div>
-        <div class="menu-card" onclick="openGame('spy')"><h2>🕵️ Шпион</h2></div>
-    </div>
-</div>
+<div class="container">
+    <header>
+        <h1>SPY<span>FALL</span></h1>
+        <p style="color: #94a3b8; margin: 5px 0 0 0;">Рейтинг лучших агентов</p>
+    </header>
 
-<div id="game-screen">
-    <div class="nav-bar">
-        <button class="btn" style="background:rgba(255,255,255,0.1)" onclick="location.reload()">← Меню</button>
-        <h2 id="game-title">ИГРА</h2>
-        <button id="authBtn" class="btn" style="background:rgba(255,255,255,0.1)" onclick="handleAuth()">Войти</button>
-    </div>
-
-    <div id="spy-banner" class="spy-banner">
-        <h3 style="margin-top:0">Готовы играть?</h3>
-        <a href="spy_game.html" class="btn-launch">ЗАПУСТИТЬ ИГРУ С ТЕЛЕФОНА</a>
+    <div class="play-banner">
+        <h2>Готовы к игре?</h2>
+        <a href="spy_game.html" class="btn-play">ЗАПУСТИТЬ МОДУЛЬ</a>
     </div>
 
     <div class="card">
-        <div class="toolbar" id="adminPanel">
-            <input type="text" id="new-player" placeholder="Имя игрока" style="flex:1">
-            <button class="btn" style="background:#10b981" onclick="addPlayer()">➕ Добавить</button>
-        </div>
         <table>
-            <thead id="t-head"></thead>
-            <tbody id="t-body"></tbody>
+            <thead>
+                <tr>
+                    <th>№</th>
+                    <th>Агент</th>
+                    <th style="text-align: center;">Игр</th>
+                    <th style="text-align: right;">Очки</th>
+                </tr>
+            </thead>
+            <tbody id="leaderboard-body">
+                </tbody>
         </table>
     </div>
-    
-    <div class="card" id="history-box">
-        <h3>История последних игр</h3>
-        <div id="history-list"></div>
-    </div>
+
+    <footer>
+        <a href="admin.html" id="admin-link">⚙️ Панель Администратора</a><br>
+        <button class="auth-small" id="auth-trigger" onclick="handleAuth()">Admin Login</button>
+    </footer>
 </div>
 
 <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
@@ -83,86 +98,74 @@
         authDomain: "tabliz-baf06.firebaseapp.com",
         databaseURL: "https://tabliz-baf06-default-rtdb.firebaseio.com",
         projectId: "tabliz-baf06",
-        storageBucket: "tabliz-baf06.firebasestorage.app",
-        messagingSenderId: "42955040155",
-        appId: "1:42955040155:web:f23b7cf6b27b6917c2ad3e",
+        appId: "1:42955040155:web:f23b7cf6b27b6917c2ad3e"
     };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
     const auth = firebase.auth();
-    const provider = new firebase.auth.GoogleAuthProvider();
 
-    let mode = '';
-    let state = { teams: [], matches: [] };
-    let isAdmin = false;
+    // 1. ЗАГРУЗКА И РАСЧЕТ ДАННЫХ
+    db.ref('/spy').on('value', snap => {
+        const data = snap.val() || { teams: [], matches: [] };
+        const players = data.teams || [];
+        const matches = data.matches || [];
 
-    function openGame(m) {
-        mode = m;
-        document.body.className = 'theme-' + m;
-        document.getElementById('main-menu').style.display = 'none';
-        document.getElementById('game-screen').style.display = 'flex';
-        document.getElementById('game-title').innerText = m.toUpperCase();
-        document.getElementById('spy-banner').style.display = (m === 'spy') ? 'block' : 'none';
-        loadData();
-    }
+        // Обнуляем счетчики перед расчетом
+        const stats = players.map(p => ({ name: p.name, pts: 0, games: 0 }));
 
-    function loadData() {
-        db.ref('/' + mode).on('value', (s) => {
-            state = s.val() || { teams: [], matches: [] };
-            calculate();
-            render();
-        });
-    }
-
-    function calculate() {
-        if(!state.teams) state.teams = [];
-        state.teams.forEach(t => { t.g=0; t.pts=0; t.w=0; t.spyWin=0; });
-        if(!state.matches) return;
-
-        state.matches.forEach(m => {
-            if(mode === 'spy') {
-                state.teams.forEach(t => t.g++);
-                const spy = state.teams.find(t => t.name === m.spy);
-                if(spy) {
-                    if(m.res === 'win') { spy.pts += 2; spy.spyWin++; }
-                    else { state.teams.forEach(t => { if(t.name !== m.spy) t.pts += 1; }); }
+        matches.forEach(m => {
+            stats.forEach(p => p.games++); // Каждая игра в базе +1 к счетчику всех
+            
+            const spyIdx = stats.findIndex(p => p.name === m.spy);
+            if (spyIdx !== -1) {
+                if (m.res === 'win') {
+                    // Шпион выиграл (2 очка)
+                    stats[spyIdx].pts += 2;
+                } else {
+                    // Шпион проиграл (Жители выиграли по 1 очку)
+                    stats.forEach((p, idx) => {
+                        if (idx !== spyIdx) p.pts += 1;
+                    });
                 }
             }
         });
-        state.teams.sort((a,b) => b.pts - a.pts);
-    }
 
-    function render() {
-        const h = document.getElementById('t-head');
-        h.innerHTML = mode === 'spy' ? `<tr><th>№</th><th>Имя</th><th>Игр</th><th>Очки</th></tr>` : `<tr><th>№</th><th>Имя</th><th>Очки</th></tr>`;
-        
-        document.getElementById('t-body').innerHTML = state.teams.map((t, i) => `
-            <tr><td>${i+1}</td><td><b>${t.name}</b></td>${mode==='spy'?`<td>${t.g}</td>`:''}<td>${t.pts}</td></tr>
+        // Сортировка по очкам
+        stats.sort((a, b) => b.pts - a.pts);
+
+        // Рендер таблицы
+        const body = document.getElementById('leaderboard-body');
+        body.innerHTML = stats.map((p, i) => `
+            <tr>
+                <td class="rank">${i + 1}</td>
+                <td class="name">${p.name}</td>
+                <td class="games">${p.games}</td>
+                <td class="pts">${p.pts}</td>
+            </tr>
         `).join('');
-
-        document.getElementById('history-list').innerHTML = (state.matches || []).slice(-5).reverse().map(m => `
-            <div style="padding:10px; border-bottom:1px solid rgba(255,255,255,0.05); font-size:14px">
-                ${mode==='spy' ? `🕵️ ${m.spy} — ${m.res=='win'?'Победа':'Пойман'} (${m.loc})` : 'Матч'}
-            </div>
-        `).join('');
-    }
-
-    async function addPlayer() {
-        const name = document.getElementById('new-player').value.trim();
-        if(!name) return;
-        if(!state.teams) state.teams = [];
-        state.teams.push({ name: name, pts: 0 });
-        await db.ref('/' + mode + '/teams').set(state.teams);
-        document.getElementById('new-player').value = "";
-    }
-
-    auth.onAuthStateChanged(u => {
-        isAdmin = !!u;
-        document.getElementById('adminPanel').classList.toggle('active', isAdmin);
-        document.getElementById('authBtn').innerText = u ? "Выход" : "Войти";
     });
 
-    async function handleAuth() { u ? await auth.signOut() : await auth.signInWithPopup(provider); }
+    // 2. ЛОГИКА АДМИНКИ (СКРЫТАЯ)
+    auth.onAuthStateChanged(user => {
+        const link = document.getElementById('admin-link');
+        const trigger = document.getElementById('auth-trigger');
+        if (user) {
+            link.style.display = 'inline-block';
+            trigger.innerText = 'Logout (' + user.displayName + ')';
+        } else {
+            link.style.display = 'none';
+            trigger.innerText = 'Admin Login';
+        }
+    });
+
+    async function handleAuth() {
+        if (auth.currentUser) {
+            await auth.signOut();
+        } else {
+            const provider = new firebase.auth.GoogleAuthProvider();
+            await auth.signInWithPopup(provider);
+        }
+    }
 </script>
 </body>
 </html>
