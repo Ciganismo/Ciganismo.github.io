@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>DS: CIGANISMO</title>
+    <style>
+        body { 
+            background: #000000;
+            color: #d4d4d4;
+            font-family: 'Courier New', monospace;
+            line-height: 1.6;
+            padding: 40px 10%;
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .header { text-align: center; margin-bottom: 20px; width: 100%; }
+
+        h1 {
+            color: #ffffff;
+            margin: 0;
+            font-size: 2.2em;
+            letter-spacing: 5px;
+            text-transform: uppercase;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.4), 0 0 20px rgba(255, 255, 255, 0.1);
+        }
+
+        .sub-header {
+            color: #ff4444;
+            margin: 10px 0;
+            font-size: 0.9em;
+            text-transform: uppercase;
+            font-weight: bold;
+            letter-spacing: 2px;
+        }
+
+        .urgent-wrapper {
+            margin: 25px 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+            width: 100%;
+        }
+
+        .btn-sync {
+            width: 320px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: transparent;
+            font-family: 'Courier New', monospace;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.3s;
+            text-decoration: none;
+            box-sizing: border-box;
+            font-size: 0.85em;
+            text-align: center;
+        }
+
+        .urgent {
+            color: #ff4444;
+            border: 1px solid #ff4444;
+            box-shadow: 0 0 10px rgba(255, 68, 68, 0.3);
+            animation: pulse-red 2s infinite;
+        }
+
+        .urgent:hover {
+            background: #ff4444;
+            color: #000;
+            box-shadow: 0 0 20px #ff4444;
+        }
+
+        @keyframes pulse-red {
+            0% { box-shadow: 0 0 0 0 rgba(255, 68, 68, 0.6); }
+            70% { box-shadow: 0 0 0 15px rgba(255, 68, 68, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(255, 68, 68, 0); }
+        }
+
+        .back-btn {
+            color: #00ffcc;
+            border: 1px solid #00ffcc;
+        }
+
+        .back-btn:hover {
+            background: rgba(0, 255, 204, 0.1);
+            box-shadow: 0 0 20px #00ffcc;
+            color: #fff;
+        }
+
+        .red-line {
+            border-bottom: 2px solid #ff4444;
+            margin: 20px 0 40px 0;
+            width: 100%;
+            max-width: 900px;
+            box-shadow: 0 0 15px rgba(255, 68, 68, 0.4);
+        }
+
+        .log-container { display: none; width: 100%; max-width: 1100px; margin-top: 30px; }
+
+        .table-wrapper {
+            border: 1px solid #441111;
+            border-radius: 4px;
+            overflow: hidden;
+            background: #050000;
+        }
+
+        table { width: 100%; border-collapse: collapse; color: #aaa; font-size: 0.85em; }
+
+        th {
+            background: #1a0505;
+            color: #ff4444;
+            text-align: center;
+            padding: 15px 10px;
+            text-transform: uppercase;
+            font-weight: bold;
+            border-bottom: 2px solid #ff4444;
+            letter-spacing: 1px;
+        }
+
+        td {
+            padding: 12px 10px;
+            border-bottom: 1px solid #2a0a0a;
+            text-align: center;
+        }
+
+        tr:nth-child(even) { background: #0a0202; }
+
+        tr:hover {
+            background: rgba(255, 68, 68, 0.08);
+            color: #fff;
+        }
+
+        /* Удален класс target-data для скрытия цели */
+
+        .blue-text { color: #569cd6; opacity: 0.8; }
+
+        .loading {
+            display: none;
+            text-align: center;
+            color: #ff4444;
+            font-size: 1.2em;
+            margin: 40px 0;
+            letter-spacing: 3px;
+            font-weight: bold;
+        }
+
+        .footer { margin-top: auto; padding-top: 40px; font-size: 0.8em; color: #222; text-align: right; width: 100%; }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1>EMERGENCY MEDICAL SERVICES</h1>
+        <div class="sub-header">LOS SANTOS DATABASE | СЕТЕВЫЕ ЛОГИ</div>
+    </div>
+
+    <div class="urgent-wrapper" id="topControls">
+        <button class="btn-sync urgent" id="startBtn" onclick="runAnalysis()">
+            [ ЗАПУСТИТЬ АНАЛИЗ ]
+        </button>
+        <a href="hub.html" class="btn-sync back-btn">
+            [ ВЕРНУТЬСЯ В HUB ]
+        </a>
+    </div>
+
+    <div class="red-line"></div>
+
+    <div id="loader" class="loading">>>> СКАНИРОВАНИЕ СЕТИ: <span id="percent">0</span>% <<<</div>
+
+    <div id="logContent" class="log-container">
+        <div style="display: flex; justify-content: center; margin-bottom: 30px;">
+            <a href="hub.html" class="btn-sync back-btn">[ ВЕРНУТЬСЯ В HUB ]</a>
+        </div>
+
+        <div style="margin-bottom: 20px; color: #ff4444; text-transform: uppercase; text-align: center; font-weight: bold; letter-spacing: 2px;">
+            [ СТАТУС: ОБНАРУЖЕНО 500 АКТИВНЫХ СОЕДИНЕНИЙ ]
+        </div>
+
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>TIMESTAMP</th>
+                        <th>SOURCE IP</th>
+                        <th>OWNER / DEVICE</th>
+                        <th>COORDINATES (X, Y, Z)</th>
+                        <th>TOWER_ID</th>
+                        <th>PACKET</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="footer">
+        Generated by: Barack | Discord: ciganismo
+    </div>
+
+<script>
+    const targetIP = "185.178.21.44";
+    const targetCoords = "522.01 749.46 210.46";
+
+    function runAnalysis() {
+        document.getElementById('topControls').style.display = 'none';
+        document.getElementById('loader').style.display = 'block';
+
+        let p = 0;
+        let timer = setInterval(() => {
+            p += Math.floor(Math.random() * 8) + 2;
+            if (p >= 100) {
+                p = 100;
+                clearInterval(timer);
+                displayData();
+            }
+            document.getElementById('percent').innerText = p;
+        }, 80);
+    }
+
+    function getRandomIP() {
+        return `${Math.floor(Math.random()*254)+1}.${Math.floor(Math.random()*254)+1}.${Math.floor(Math.random()*254)+1}.${Math.floor(Math.random()*254)+1}`;
+    }
+
+    function displayData() {
+        document.getElementById('loader').style.display = 'none';
+        document.getElementById('logContent').style.display = 'block';
+
+        const body = document.getElementById('tableBody');
+        const totalRows = 500;
+        const targetIndex = Math.floor(Math.random() * totalRows);
+        const towers = ["SANDY_S_01", "DOWNTOWN_HUB", "PALETO_S_04", "ROCKFORD_V_2"];
+
+        for (let i = 0; i < totalRows; i++) {
+            let row = body.insertRow();
+            let time = new Date().toLocaleTimeString('ru-RU', { hour12: false });
+
+            // Цель теперь выводится как обычная строка без выделения
+            if (i === targetIndex) {
+                row.innerHTML = `
+                    <td>${time}</td>
+                    <td>${targetIP}</td>
+                    <td class="blue-text">Unknown User</td>
+                    <td>${targetCoords}</td>
+                    <td>KINOSTUDIO_HUB</td>
+                    <td>99.4 KB</td>
+                `;
+            } else {
+                row.innerHTML = `
+                    <td>${time}</td>
+                    <td>${getRandomIP()}</td>
+                    <td class="blue-text">Citizen_${Math.floor(Math.random()*999)}</td>
+                    <td>${(Math.random()*4000-2000).toFixed(2)}, ${(Math.random()*4000-2000).toFixed(2)}, ${(Math.random()*50).toFixed(2)}</td>
+                    <td>${towers[Math.floor(Math.random()*towers.length)]}</td>
+                    <td>${(Math.random()*150).toFixed(1)} KB</td>
+                `;
+            }
+        }
+    }
+</script>
+</body>
+</html>

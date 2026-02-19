@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>DS: CIGANISMO</title>
+    <style>
+        body {
+            background: #000000;
+            color: #d4d4d4;
+            font-family: 'Courier New', monospace;
+            line-height: 1.6;
+            padding: 40px 10%;
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+            width: 100%;
+        }
+
+        h1 {
+            color: #ffffff;
+            margin: 0;
+            font-size: 2.2em;
+            letter-spacing: 5px;
+            text-transform: uppercase;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.4), 0 0 20px rgba(255, 255, 255, 0.1);
+        }
+
+        /* ВОЗВРАЩЕН КРАСНЫЙ ЦВЕТ */
+        .sub-info {
+            color: #ff4444;
+            margin: 10px 0;
+            font-size: 0.9em;
+            text-transform: uppercase;
+            font-weight: bold;
+            letter-spacing: 2px;
+            text-shadow: 0 0 8px rgba(255, 68, 68, 0.3);
+        }
+
+        /* ЛИНИЯ ТЕПЕРЬ КРАСНАЯ */
+        .red-line {
+            border-bottom: 2px solid #ff4444;
+            margin: 20px 0 40px 0;
+            width: 100%;
+            max-width: 900px;
+            box-shadow: 0 0 15px rgba(255, 68, 68, 0.4);
+        }
+
+        .sub-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 25px;
+            width: 100%;
+            max-width: 1000px;
+        }
+
+        .sub-card {
+            background: transparent;
+            border: 1px solid #444; /* Нейтральный контур */
+            padding: 40px 20px;
+            text-align: center;
+            text-decoration: none;
+            color: #d4d4d4;
+            transition: all 0.3s;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 200px;
+        }
+
+        /* ЭФФЕКТ ПРИ НАВЕДЕНИИ — КРАСНЫЙ */
+        .sub-card:hover {
+            background: rgba(255, 68, 68, 0.05);
+            border-color: #ff4444;
+            box-shadow: 0 0 25px rgba(255, 68, 68, 0.2);
+            color: #fff;
+            transform: translateY(-5px);
+        }
+
+        /* ИКОНКИ В КРАСНЫХ ТОНАХ */
+        .icon {
+            font-size: 40px;
+            margin-bottom: 10px;
+            filter: grayscale(100%) sepia(100%) hue-rotate(-50deg) saturate(600%) brightness(1);
+            transition: 0.3s;
+        }
+
+        .sub-card:hover .icon {
+            filter: grayscale(100%) sepia(100%) hue-rotate(-50deg) saturate(800%) brightness(1.2) drop-shadow(0 0 10px rgba(255, 68, 68, 0.6));
+        }
+
+        .sub-card h4 {
+            margin: 15px 0 5px 0;
+            font-size: 1.1em;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        /* КНОПКА ВОЗВРАТА — КРАСНАЯ */
+        .back-to-main {
+            margin-top: 60px;
+            width: 320px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: transparent;
+            color: #ff4444;
+            border: 1px solid #ff4444;
+            text-decoration: none;
+            font-size: 0.85em;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            transition: 0.3s;
+        }
+
+        .back-to-main:hover {
+            background: rgba(255, 68, 68, 0.1);
+            box-shadow: 0 0 20px #ff4444;
+            color: #fff;
+        }
+
+        .footer {
+            margin-top: auto;
+            padding-top: 40px;
+            font-size: 0.8em;
+            color: #222;
+            text-align: right;
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1>SUBLEVEL_02: NETWORK_ANALYSIS</h1>
+        <div class="sub-info">ДОСТУП К ВНУТРЕННИМ ПРОТОКОЛАМ РАЗРЕШЕН // LVL_2</div>
+    </div>
+
+    <div class="red-line"></div>
+
+    <div class="sub-grid">
+        <a href="stage2_file1.html" class="sub-card">
+            <div class="icon">🚬</div>
+            <h4>MONGO_VERSACE</h4>
+            <p style="font-size: 0.7em; opacity: 0.5; letter-spacing: 1px;">СПРЯТАННЫЙ ТЕКСТ</p>
+        </a>
+
+        <a href="stage2_file2.html" class="sub-card">
+            <div class="icon">🎀️</div>
+            <h4>EQUI_DRIPSET</h4>
+            <p style="font-size: 0.7em; opacity: 0.5; letter-spacing: 1px;">ПОТАЙНАЯ КНОПКА</p>
+        </a>
+
+        <a href="stage2_file3.html" class="sub-card">
+            <div class="icon">🩺</div>
+            <h4>ANASTASIYA_VERSACE</h4>
+            <p style="font-size: 0.7em; opacity: 0.5; letter-spacing: 1px;">ЗМЕЙКА</p>
+        </a>
+    </div>
+
+    <a href="hub.html" class="back-to-main">[ ВЕРНУТЬСЯ В HUB ]</a>
+
+    <div class="footer">
+        Generated by: Barack | Discord: ciganismo
+    </div>
+
+</body>
+</html>

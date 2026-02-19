@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>HACKER_DEVICE_FS</title>
+    <style>
+        body {
+            background: #000000;
+            color: #d4d4d4;
+            font-family: 'Courier New', monospace;
+            line-height: 1.6;
+            padding: 40px 10%;
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .header { text-align: center; margin-bottom: 20px; width: 100%; }
+
+        h1 {
+            color: #ffffff;
+            margin: 0;
+            font-size: 2.2em;
+            letter-spacing: 5px;
+            text-transform: uppercase;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.4), 0 0 20px rgba(255, 255, 255, 0.1);
+        }
+
+        .sub-header {
+            color: #ff4444;
+            margin: 10px 0;
+            font-size: 0.9em;
+            text-transform: uppercase;
+            font-weight: bold;
+            letter-spacing: 2px;
+        }
+
+        .red-line {
+            border-bottom: 2px solid #ff4444;
+            margin: 20px 0 40px 0;
+            width: 100%;
+            max-width: 900px;
+            box-shadow: 0 0 15px rgba(255, 68, 68, 0.4);
+        }
+
+        /* ОКНО ПРОВОДНИКА - ТЕПЕРЬ КРАСНОЕ */
+        .explorer-box {
+            background: rgba(10, 0, 0, 0.9);
+            border: 1px solid #ff4444;
+            width: 100%;
+            max-width: 1000px;
+            min-height: 500px;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 0 20px rgba(255, 68, 68, 0.1);
+        }
+
+        .nav-bar {
+            background: #1a0505;
+            padding: 15px 20px;
+            display: flex;
+            align-items: center;
+            border-bottom: 1px solid #ff4444;
+            gap: 15px;
+        }
+
+        .nav-btn {
+            cursor: pointer;
+            font-weight: bold;
+            padding: 8px 15px;
+            font-size: 0.75em;
+            text-transform: uppercase;
+            transition: 0.3s;
+            border: 1px solid #ff4444;
+            color: #ff4444;
+            background: transparent;
+        }
+
+        .nav-btn:hover {
+            background: rgba(255, 68, 68, 0.2);
+            box-shadow: 0 0 10px #ff4444;
+            color: #fff;
+        }
+
+        .current-path {
+            color: #ff4444;
+            font-size: 0.8em;
+            flex-grow: 1;
+            text-align: right;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            text-shadow: 0 0 5px rgba(255, 68, 68, 0.3);
+        }
+
+        .file-display {
+            padding: 30px;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 20px;
+        }
+
+        .entry {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            cursor: pointer;
+            padding: 20px 10px;
+            transition: 0.3s;
+            text-align: center;
+            border: 1px solid transparent;
+        }
+
+        .entry:hover {
+            background: rgba(255, 68, 68, 0.07);
+            border-color: rgba(255, 68, 68, 0.4);
+            transform: translateY(-3px);
+        }
+
+        /* КРАСНЫЙ ФИЛЬТР ДЛЯ ИКОНОК */
+        .entry-icon {
+            font-size: 50px;
+            margin-bottom: 10px;
+            filter: grayscale(100%) sepia(100%) hue-rotate(-50deg) saturate(600%) brightness(1);
+        }
+
+        .entry-name { font-size: 0.75em; color: #ff4444; letter-spacing: 1px; }
+
+        /* ГЛАВНАЯ КНОПКА HUB ВНИЗУ */
+        .back-to-main {
+            margin-top: 50px;
+            width: 320px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: transparent;
+            color: #00ffcc;
+            border: 1px solid #00ffcc;
+            text-decoration: none;
+            font-size: 0.85em;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            transition: 0.3s;
+        }
+
+        .back-to-main:hover {
+            background: rgba(0, 255, 204, 0.1);
+            box-shadow: 0 0 20px #00ffcc;
+            color: #fff;
+        }
+
+        /* МОДАЛЬНОЕ ОКНО */
+        #modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.95);
+            z-index: 9999;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            backdrop-filter: blur(5px);
+        }
+
+        #content-box {
+            max-width: 80%;
+            max-height: 70vh;
+            border: 1px solid #ff4444;
+            box-shadow: 0 0 30px rgba(255, 68, 68, 0.3);
+            background: #000;
+        }
+
+        .text-file-view {
+            background: #050000;
+            padding: 40px;
+            border: 1px solid #ff4444;
+            color: #ff4444;
+            max-width: 600px;
+            width: 90%;
+            text-align: left;
+            box-shadow: 0 0 20px rgba(255, 68, 68, 0.2);
+        }
+
+        .close-trigger {
+            color: #ff4444;
+            margin-top: 30px;
+            cursor: pointer;
+            text-transform: uppercase;
+            font-size: 0.85em;
+            font-weight: bold;
+            letter-spacing: 2px;
+            background: transparent;
+            padding: 12px 30px;
+            border: 1px solid #ff4444;
+            transition: 0.3s;
+        }
+
+        .close-trigger:hover {
+            background: #ff4444;
+            color: #000;
+            box-shadow: 0 0 20px #ff4444;
+        }
+
+        .footer { margin-top: auto; padding-top: 40px; font-size: 0.8em; color: #222; text-align: right; width: 100%; }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1>HACKER DEVICE FILE SYSTEM</h1>
+        <div class="sub-header">LOCAL_DRIVE_X // ДОСТУП К ПАМЯТИ УСТРОЙСТВА</div>
+    </div>
+
+    <div class="red-line"></div>
+
+    <div class="explorer-box">
+        <div class="nav-bar">
+            <div id="btnBack" class="nav-btn" onclick="navBack()" style="visibility: hidden;">[ НАЗАД ]</div>
+            <div class="current-path" id="pathText">DEVICE / ROOT</div>
+        </div>
+        <div id="fileGrid" class="file-display"></div>
+    </div>
+
+    <a href="hub.html" class="back-to-main">[ ГЛАВНЫЙ ТЕРМИНАЛ ]</a>
+
+    <div id="modal-overlay">
+        <div id="modalBody" style="display: flex; justify-content: center; width: 100%;"></div>
+        <div class="close-trigger" onclick="closeModal()">[ ЗАКРЫТЬ ТЕРМИНАЛ ]</div>
+    </div>
+
+    <div class="footer">
+        Generated by: Barack | Discord: ciganismo
+    </div>
+
+<script>
+    let currentAudio = null;
+
+    const fsData = {
+        name: "ROOT",
+        type: "dir",
+        content: [
+            { name: "Documents", type: "dir", content: [
+                { name: "Work", type: "dir", content: [
+                    { name: "targets.txt", type: "file", text: "Список целей: \n1. EMERGENCY MEDICAL SERVICES\n2. LOS SANTOS POLICE DEPARTMENT\n3. GOVERMENT" },
+                    { name: "easter_egg.txt", type: "file", text: "Discord/telegram: ciganismo" }
+                ]},
+                { name: "Personal", type: "dir", content: [
+                    { name: "note.txt", type: "file", text: "Не забыть: Диски спрятаны в старом доме." }
+                ]}
+            ]},
+            { name: "Media", type: "dir", content: [
+                { name: "Photos", type: "dir", content: [
+                    { name: "Отдых Анапа 2004", type: "dir", content: [
+                        { name: "????.jpg", type: "file", img: "https://i.postimg.cc/rpw5k203/fckyou.jpg" }
+                    ] },
+                    { name: "Важное", type: "dir", content: [
+                        { name: "STREET_VIEW.jpg", type: "file", img: "https://i.postimg.cc/0jYq2DgW/20260212112425-1.jpg" }
+                    ]}
+                ]},
+                { name: "Audio", type: "dir", content: [
+                    {
+                        name: "Очень_много_свэга???.mp3",
+                        type: "file",
+                        audio: "https://cdn.discordapp.com/attachments/1445737578123755613/1471443735454683209/Whole_Lotta_Swag_-_Pravda_77722512.mp3?ex=698ef444&is=698da2c4&hm=fb73a30f0fe75530e3bdad2488c7df937b4445b24d5ec95a76bc7a68745647c6&",
+                        text: "[ВОСПРОИЗВЕДЕНИЕ АУДИОФАЙЛА]\n\nНазвание: Правда\nАвтор: Whole Lotta Swag"
+                    }
+                ]}
+            ]},
+            { name: "System", type: "dir", content: [
+                { name: "Cache", type: "dir", content: [] },
+                { name: "Security", type: "dir", content: [
+                    { name: "key.pem", type: "file", text: "RSA PRIVATE KEY: [ENCRYPTED]" }
+                ]}
+            ]},
+            { name: "Downloads", type: "dir", content: [
+                { name: "Tor_Browser", type: "dir", content: [] },
+                { name: "VPN_Configs", type: "dir", content: [] }
+            ]}
+        ]
+    };
+
+    let navHistory = [fsData];
+    let activeDir = fsData;
+
+    function renderFiles() {
+        const grid = document.getElementById('fileGrid');
+        const path = document.getElementById('pathText');
+        const btn = document.getElementById('btnBack');
+
+        grid.innerHTML = '';
+        path.innerText = "DEVICE / " + navHistory.map(d => d.name).join(' / ');
+        btn.style.visibility = navHistory.length > 1 ? 'visible' : 'hidden';
+
+        activeDir.content.forEach(item => {
+            const el = document.createElement('div');
+            el.className = 'entry';
+            const icon = item.type === 'dir' ? '📁' : (item.audio ? '🎵' : '📄');
+            el.innerHTML = `<div class="entry-icon">${icon}</div><div class="entry-name">${item.name}</div>`;
+            el.onclick = () => {
+                if (item.type === 'dir') {
+                    navHistory.push(item);
+                    activeDir = item;
+                    renderFiles();
+                } else {
+                    handleFile(item);
+                }
+            };
+            grid.appendChild(el);
+        });
+    }
+
+    function navBack() {
+        if (navHistory.length > 1) {
+            navHistory.pop();
+            activeDir = navHistory[navHistory.length - 1];
+            renderFiles();
+        }
+    }
+
+    function handleFile(file) {
+        const overlay = document.getElementById('modal-overlay');
+        const body = document.getElementById('modalBody');
+        overlay.style.display = 'flex';
+
+        if (file.audio) {
+            if (currentAudio) { currentAudio.pause(); }
+            currentAudio = new Audio(file.audio);
+            currentAudio.play();
+        }
+
+        if (file.img) {
+            body.innerHTML = `<img src="${file.img}" id="content-box">`;
+        } else if (file.text || file.audio) {
+            const label = file.audio ? "AUDIO_PLAYER" : "FILE_READER";
+            body.innerHTML = `<div class="text-file-view"><strong>[ ${label} ]</strong><br><br>${(file.text || "").replace(/\n/g, '<br>')}</div>`;
+        }
+    }
+
+    function closeModal() {
+        document.getElementById('modal-overlay').style.display = 'none';
+        if (currentAudio) {
+            currentAudio.pause();
+            currentAudio = null;
+        }
+    }
+
+    renderFiles();
+</script>
+</body>
+</html>

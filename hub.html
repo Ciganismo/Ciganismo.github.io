@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>DS: CIGANISMO</title>
+    <style>
+        body {
+            background: #000000;
+            color: #d4d4d4;
+            font-family: 'Courier New', monospace;
+            padding: 40px 5%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+
+        /* ПОТАЙНОЙ ЗАГОЛОВОК */
+        h1 {
+            color: #ffffff;
+            letter-spacing: 5px;
+            text-transform: uppercase;
+            text-align: center;
+            margin-top: 20px;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.6), 0 0 20px rgba(255, 255, 255, 0.2);
+            cursor: pointer; /* Делаем заголовок кликабельным */
+            user-select: none;
+        }
+
+        .red-line {
+            border-bottom: 2px solid #ff4444;
+            width: 100%;
+            max-width: 900px;
+            margin: 20px 0 40px 0;
+            box-shadow: 0 0 15px rgba(255, 68, 68, 0.7);
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 30px;
+            width: 100%;
+            max-width: 800px;
+        }
+
+        .card {
+            background: #050505;
+            border: 1px solid #333;
+            aspect-ratio: 1 / 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .card:hover {
+            border-color: #ff4444;
+            background: #0a0000;
+            box-shadow: 0px 0px 30px rgba(255, 68, 68, 0.4);
+        }
+
+        .card h3 { color: #ff4444; margin: 0; font-size: 2.2em; letter-spacing: 4px; }
+        .card p { margin-top: 15px; font-size: 1.1em; color: #ff4444; opacity: 0.7; text-transform: uppercase; }
+
+        /* ОКНО СКРЫТОГО ТЕКСТА */
+        #secret-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.95);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            backdrop-filter: blur(10px);
+        }
+
+        .secret-terminal {
+            width: 80%;
+            max-width: 600px;
+            border: 1px solid #ff4444;
+            background: #050000;
+            padding: 30px;
+            box-shadow: 0 0 40px rgba(255, 68, 68, 0.2);
+        }
+
+        .terminal-header {
+            color: #ff4444;
+            border-bottom: 1px solid #ff4444;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        #secret-content {
+            color: #d4d4d4;
+            line-height: 1.8;
+            font-size: 1.1em;
+            white-space: pre-wrap; /* Чтобы сохранялись переносы строк */
+        }
+
+        .close-btn {
+            margin-top: 30px;
+            background: transparent;
+            color: #ff4444;
+            border: 1px solid #ff4444;
+            padding: 10px 30px;
+            cursor: pointer;
+            text-transform: uppercase;
+            font-family: 'Courier New';
+            transition: 0.3s;
+        }
+
+        .close-btn:hover { background: #ff4444; color: #000; }
+
+        /* СТИЛЬ ДЛЯ ВВОДА ПАРОЛЯ */
+        #pass-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.98);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+        }
+
+        input {
+            background: transparent; border: 1px solid #ff4444; color: #fff;
+            padding: 15px; font-family: 'Courier New'; text-align: center;
+            outline: none; width: 300px; font-size: 1.5em;
+        }
+
+        .footer { margin-top: auto; padding-top: 40px; font-size: 0.8em; color: #444; }
+
+        @media (max-width: 600px) { .grid { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+
+    <h1 onclick="showSecret()">Emergency Medical Services</h1>
+
+    <div class="red-line"></div>
+
+    <div class="grid">
+        <div class="card" onclick="askPass(1, 'stage1.html')">
+            <h3>ЭТАП 1</h3>
+            <p>ВОССТАНОВЛЕНИЕ ФОТО</p>
+        </div>
+        <div class="card" onclick="askPass(2, 'stage2.html')">
+            <h3>ЭТАП 2</h3>
+            <p>ПОИСК ИНФОРМАЦИИ</p>
+        </div>
+        <div class="card" onclick="askPass(3, 'stage3.html')">
+            <h3>ЭТАП 3</h3>
+            <p>ВЫЧИСЛЮ ПО IP</p>
+        </div>
+        <div class="card" onclick="askPass(4, 'stage4.html')">
+            <h3>ЭТАП 4</h3>
+            <p>ВЗЛОМ ТЕЛЕФОНА</p>
+        </div>
+    </div>
+
+    <div id="secret-overlay">
+        <div class="secret-terminal">
+            <div class="terminal-header">>>> ПОСЛАНИЕ ОТ АВТОРА</div>
+            <div id="secret-content"></div>
+            <button class="close-btn" onclick="hideSecret()">ЗАКРЫТЬ ТЕРМИНАЛ</button>
+        </div>
+    </div>
+
+    <div id="pass-overlay">
+        <h2 style="color:#ff4444; letter-spacing: 2px;">ENTER ACCESS KEY</h2>
+        <input type="password" id="pass-input">
+        <button class="close-btn" style="margin-top:20px" onclick="checkPass()">DECRYPT</button>
+        <p onclick="closePass()" style="color:#444; cursor:pointer; margin-top:20px;">[ ОТМЕНА ]</p>
+    </div>
+
+    <div class="footer">Generated by: Barack | Discord: ciganismo</div>
+
+    <script>
+        const mySecretText = `ВНИМАНИЕ:
+Всех благодарю, кто поучавствовал в моем мероприятии,я надеюсь оно вам понравилось.
+Если кому-то требуется написать ГМП подобного рода, то пишите мне в лс
+Всех люблю целую и обожаю.
+
+
+
+ciganismo FOREVER`;
+
+        let currentStage = 0;
+        let targetUrl = "";
+        const passwords = { 1: "1350", 2: "4398", 3: "7634", 4: "9841" };
+
+
+        function showSecret() {
+            document.getElementById('secret-content').innerText = mySecretText;
+            document.getElementById('secret-overlay').style.display = 'flex';
+        }
+
+        function hideSecret() {
+            document.getElementById('secret-overlay').style.display = 'none';
+        }
+
+
+        function askPass(stage, url) {
+            currentStage = stage;
+            targetUrl = url;
+            document.getElementById('pass-overlay').style.display = 'flex';
+            document.getElementById('pass-input').value = '';
+            document.getElementById('pass-input').focus();
+        }
+
+        function closePass() { document.getElementById('pass-overlay').style.display = 'none'; }
+
+        function checkPass() {
+            if (document.getElementById('pass-input').value === passwords[currentStage]) {
+                window.location.href = targetUrl;
+            } else {
+                alert("ACCESS DENIED");
+                document.getElementById('pass-input').value = '';
+            }
+        }
+    </script>
+</body>
+</html>
