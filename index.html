@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ГМП Окончено</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@900&family=Roboto:wght@300&display=swap');
+
+        body {
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background: #1a050d; /* Темный вишневый фон */
+            color: #ff4d94;
+            font-family: 'Montserrat', sans-serif;
+            overflow: hidden;
+            text-align: center;
+        }
+
+
+        .hearts-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .heart {
+            position: absolute;
+            bottom: -50px;
+            color: #ff4d94;
+            font-size: 20px;
+            opacity: 0.8;
+            user-select: none;
+            animation: moveHearts linear forwards;
+        }
+
+
+        .content {
+            z-index: 10;
+            position: relative;
+        }
+
+        h1 {
+            font-size: 4rem;
+            margin: 0;
+            text-transform: uppercase;
+            letter-spacing: 4px;
+            text-shadow: 0 0 20px rgba(255, 77, 148, 0.7);
+            animation: pulse 2s infinite alternate ease-in-out;
+        }
+
+        h2 {
+            font-size: 1.5rem;
+            font-weight: 300;
+            color: #ff85b3;
+            margin-top: 10px;
+        }
+
+
+        .footer {
+            position: absolute;
+            bottom: 40px;
+            font-family: 'Roboto', sans-serif;
+            font-size: 1.1rem;
+            color: rgba(255, 255, 255, 0.7);
+            z-index: 10;
+        }
+
+        .discord {
+            color: #ff4d94;
+            font-weight: bold;
+            text-shadow: 0 0 10px rgba(255, 77, 148, 0.5);
+        }
+
+
+        @keyframes pulse {
+            from { transform: scale(1); }
+            to { transform: scale(1.05); }
+        }
+
+        @keyframes moveHearts {
+            0% {
+                transform: translateY(0) rotate(0deg);
+                opacity: 0.8;
+            }
+            100% {
+                transform: translateY(-110vh) rotate(360deg);
+                opacity: 0;
+            }
+        }
+
+
+        @media (max-width: 600px) {
+            h1 { font-size: 2rem; }
+            h2 { font-size: 1rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="hearts-container" id="hearts"></div>
+
+    <div class="content">
+        <h1>ГМП ОКОНЧЕНО</h1>
+        <h2>ОЖИДАЙТЕ СЛЕДУЮЩЕГО</h2>
+    </div>
+
+    <div class="footer">
+        по всем вопросам связь через Discord: <span class="discord">ciganismo</span>
+    </div>
+
+    <script>
+        function createHeart() {
+            const container = document.getElementById('hearts');
+            const heart = document.createElement('div');
+            heart.classList.add('heart');
+
+
+            const hearts = ['❤', '💖', '💗', '💕', '🌸'];
+            heart.innerText = hearts[Math.floor(Math.random() * hearts.length)];
+
+
+            heart.style.left = Math.random() * 100 + "vw";
+
+
+            const size = Math.random() * 20 + 10 + "px";
+            heart.style.fontSize = size;
+
+
+            const duration = Math.random() * 3 + 4 + "s";
+            heart.style.animationDuration = duration;
+
+            container.appendChild(heart);
+
+
+            setTimeout(() => {
+                heart.remove();
+            }, 7000);
+        }
+
+        
+        setInterval(createHeart, 300);
+    </script>
+</body>
+</html>
