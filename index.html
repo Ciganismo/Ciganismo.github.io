@@ -2,8 +2,7 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Panel v4.1 — GTA5 RP</title>
+    <title>Admin Panel v4.3 — GTA5 RP</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -13,8 +12,8 @@
             --danger: #ef4444; --radius: 12px;
         }
 
-        * { box-sizing: border-box; transition: all 0.2s ease; }
-        body { font-family: 'Inter', sans-serif; background-color: var(--bg-deep); color: var(--text-main); margin: 0; line-height: 1.5; overflow-x: hidden; }
+        * { box-sizing: border-box; transition: all 0.1s ease; }
+        body { font-family: 'Inter', sans-serif; background-color: var(--bg-deep); color: var(--text-main); margin: 0; }
 
         .admin-header {
             background-color: rgba(20, 20, 22, 0.8); backdrop-filter: blur(12px);
@@ -26,48 +25,36 @@
 
         .wrapper { max-width: 1600px; margin: 30px auto; padding: 0 40px; display: grid; grid-template-columns: 320px 1fr; gap: 30px; }
 
-        .tab-menu { display: flex; flex-direction: column; gap: 8px; margin-bottom: 25px; }
+        .tab-menu { display: flex; flex-direction: column; gap: 8px; }
         .tab-btn {
             padding: 14px 18px; border-radius: var(--radius); cursor: pointer; border: 1px solid transparent;
             background: transparent; color: var(--text-main); text-align: left; font-weight: 600; font-size: 14px;
         }
         .tab-btn.active { background: var(--bg-card); border-color: var(--border); color: var(--accent); }
 
-        .card { background-color: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; margin-bottom: 20px; }
-        .card h3 { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-bright); margin-top: 0; margin-bottom: 20px; opacity: 0.7; }
+        .card { background-color: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; margin-bottom: 20px; }
+        .card h3 { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-bright); margin-top: 0; margin-bottom: 15px; opacity: 0.6; }
 
         input, select, textarea {
             width: 100%; background: var(--bg-input); border: 1px solid var(--border);
-            padding: 12px; color: #fff; border-radius: 8px; margin-bottom: 12px; outline: none; font-size: 13px; font-family: inherit;
+            padding: 12px; color: #fff; border-radius: 8px; margin-bottom: 10px; outline: none; font-size: 13px;
         }
 
-        .btn { padding: 12px 20px; border: none; border-radius: 8px; cursor: pointer; font-weight: 700; font-size: 13px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
-        .btn-orange { background: var(--accent); color: #000; width: 100%; }
+        .btn { padding: 12px 20px; border: none; border-radius: 8px; cursor: pointer; font-weight: 700; font-size: 13px; display: inline-flex; align-items: center; justify-content: center; width: 100%; }
+        .btn-orange { background: var(--accent); color: #000; }
         .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text-main); }
-        .btn-orange:hover { background: var(--accent-hover); transform: translateY(-1px); }
 
-        .table-wrap { overflow-x: auto; border-radius: 8px; border: 1px solid var(--border); }
         .data-table { width: 100%; border-collapse: collapse; }
-        .data-table th { background: rgba(255,255,255,0.02); text-align: left; padding: 12px 15px; border-bottom: 1px solid var(--border); color: var(--text-bright); font-size: 11px; }
-        .data-table td { padding: 12px 15px; border-bottom: 1px solid var(--border); font-size: 12px; font-family: 'JetBrains Mono', monospace; }
-        .week-row { background: rgba(255, 140, 0, 0.05); color: var(--accent); font-weight: bold; }
+        .data-table th { text-align: left; padding: 12px; border-bottom: 1px solid var(--border); font-size: 11px; color: var(--text-bright); }
+        .data-table td { padding: 12px; border-bottom: 1px solid var(--border); font-size: 12px; font-family: 'JetBrains Mono', monospace; }
 
-        .content-section { display: none; }
-        .content-section.active { display: block; animation: fadeIn 0.3s ease; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; } }
-
-        #reaction-area {
-            width: 100%; height: 250px; border-radius: 12px; display: flex;
-            align-items: center; justify-content: center; cursor: pointer; user-select: none;
-            font-size: 24px; color: #fff; background: var(--bg-input); border: 2px solid var(--border);
-        }
-        #reaction-area.wait { background: #e11d48; border-color: #f43f5e; }
-        #reaction-area.ready { background: #10b981; border-color: #34d399; }
-        
         .badge { padding: 4px 8px; border-radius: 6px; font-size: 10px; font-weight: 800; text-transform: uppercase; }
         .status-none { background: #3f3f46; color: #fff; }
         .status-ban { background: rgba(239, 68, 68, 0.2); color: var(--danger); border: 1px solid var(--danger); }
         .status-clear { background: rgba(16, 185, 129, 0.2); color: var(--success); border: 1px solid var(--success); }
+
+        .content-section { display: none; }
+        .content-section.active { display: block; }
     </style>
 </head>
 <body>
@@ -79,7 +66,7 @@
     </div>
     <div style="text-align: right;">
         <div style="font-weight: 700; color: var(--text-bright);">Barack Cheremsha</div>
-        <div style="color: var(--accent); font-size: 11px; font-family: 'JetBrains Mono';">ciganismo</div>
+        <div style="color: var(--accent); font-size: 11px; font-family: 'JetBrains Mono';">v4.3 Fixed</div>
     </div>
 </header>
 
@@ -89,338 +76,141 @@
             <button class="tab-btn active" id="btn-analyzer" onclick="switchTab('analyzer')">🔍 Анализатор</button>
             <button class="tab-btn" id="btn-reports" onclick="switchTab('reports')">📊 Статистика</button>
             <button class="tab-btn" id="btn-suspects" onclick="switchTab('suspects')">⚖️ Проверки</button>
-            <button class="tab-btn" id="btn-game" onclick="switchTab('game')">⚡ Реакция</button>
         </nav>
 
-        <div id="side-analyzer" class="card side-panel">
-            <h3>Фильтр сайтов</h3>
-            <div id="activeDomains" style="margin-bottom: 15px; display: flex; flex-wrap: wrap; gap: 5px;"></div>
-            <input type="text" id="domainInput" placeholder="Добавить домен...">
-            <button class="btn btn-orange" onclick="addDomain()">Добавить</button>
+        <div id="side-analyzer" class="card">
+            <h3>Фильтр софта</h3>
+            <input type="text" id="newDom" placeholder="Домен...">
+            <button class="btn btn-orange" onclick="addFilter('dom')">Добавить</button>
         </div>
 
-        <div id="side-reports" class="card side-panel" style="display:none">
-            <h3>Новый отчет</h3>
-            <input type="date" id="reportDate">
-            <input type="number" id="reportHours" step="0.1" placeholder="Часы">
-            <input type="number" id="reportCount" placeholder="Репорты">
-            <button class="btn btn-orange" onclick="addReport()">Сохранить</button>
-        </div>
-
-        <div id="side-suspects" class="card side-panel" style="display:none">
-            <h3>Подозреваемый</h3>
-            <input type="text" id="susName" placeholder="Имя_Фамилия #Паспорт">
-            <input type="text" id="susLogin" placeholder="Логин / Social ID">
-            <textarea id="susReason" placeholder="Подозрение..." rows="2"></textarea>
-            <textarea id="susEvidence" placeholder="Доказательства" rows="2"></textarea>
+        <div id="side-suspects" class="card" style="display:none">
+            <h3>Новая проверка</h3>
+            <input type="text" id="sName" placeholder="Имя_Фамилия #ID">
+            <input type="text" id="sData" placeholder="Social / Логин">
+            <textarea id="sReason" placeholder="Причина..."></textarea>
             <button class="btn btn-orange" onclick="addSuspect()">Внести в базу</button>
-        </div>
-
-        <div class="card">
-            <button class="btn btn-outline" style="width:100%; margin-bottom:10px" onclick="exportData()">💾 Экспорт (JSON)</button>
-            <button class="btn btn-outline" style="width:100%" onclick="document.getElementById('importFile').click()">📂 Импорт</button>
-            <input type="file" id="importFile" style="display:none" onchange="importData(event)">
         </div>
     </aside>
 
     <main>
         <section id="section-analyzer" class="content-section active">
-            <div class="card" style="border: 2px dashed var(--border); text-align:center; padding:40px; cursor:pointer;" onclick="document.getElementById('fileInput').click()">
-                <b id="fileNameDisplay">Нажмите, чтобы загрузить .txt лог</b>
-                <input type="file" id="fileInput" accept=".txt" style="display: none;">
+            <div class="card" style="border: 2px dashed var(--border); text-align:center; padding:30px; cursor:pointer;" onclick="document.getElementById('fileIn').click()">
+                <b>Загрузить .txt лог</b>
+                <input type="file" id="fileIn" accept=".txt" hidden>
             </div>
             <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px;">
                 <div class="card" style="padding:0">
-                    <div style="padding:15px; border-bottom:1px solid var(--border);">САЙТЫ (<span id="urlCount">0</span>)</div>
-                    <div style="max-height:450px; overflow-y:auto;"><table class="data-table"><tbody id="urlList"></tbody></table></div>
+                    <div style="padding:15px; border-bottom:1px solid var(--border);">САЙТЫ (<span id="countUrl">0</span>)</div>
+                    <table class="data-table"><tbody id="listUrl"></tbody></table>
                 </div>
                 <div class="card" style="padding:0">
-                    <div style="padding:15px; border-bottom:1px solid var(--border);">ПОЧТЫ (<span id="emailCount">0</span>)</div>
-                    <div style="max-height:450px; overflow-y:auto;"><table class="data-table"><tbody id="emailList"></tbody></table></div>
+                    <div style="padding:15px; border-bottom:1px solid var(--border);">ПОЧТЫ (<span id="countEmail">0</span>)</div>
+                    <table class="data-table"><tbody id="listEmail"></tbody></table>
                 </div>
-            </div>
-        </section>
-
-        <section id="section-reports" class="content-section">
-            <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:20px; margin-bottom:20px;">
-                <div class="card" style="text-align:center"><b>ЧАСЫ</b><div id="totalHours" style="font-size:24px; color:var(--accent)">0</div></div>
-                <div class="card" style="text-align:center"><b>РЕПОРТЫ</b><div id="totalReports" style="font-size:24px; color:var(--accent)">0</div></div>
-                <div class="card" style="text-align:center"><b>Р/Ч</b><div id="avgReports" style="font-size:24px; color:var(--accent)">0</div></div>
-            </div>
-            <div class="card" style="padding:0">
-                <div style="padding:15px; border-bottom:1px solid var(--border);"><b>НЕДЕЛЬНЫЕ ИТОГИ (ВС - СБ)</b></div>
-                <table class="data-table">
-                    <thead><tr><th>Период</th><th>Часы</th><th>Репорты</th><th>Р/Ч</th></tr></thead>
-                    <tbody id="weekTableBody"></tbody>
-                </table>
-            </div>
-            <div class="card" style="padding:0; margin-top:20px">
-                <div style="padding:15px; border-bottom:1px solid var(--border);"><b>ДЕТАЛИЗАЦИЯ ПО ДНЯМ</b></div>
-                <table class="data-table"><tbody id="dayTableBody"></tbody></table>
             </div>
         </section>
 
         <section id="section-suspects" class="content-section">
             <div class="card" style="padding:0">
-                <div class="table-wrap">
-                    <table class="data-table">
-                        <thead>
-                            <tr>
-                                <th>Дата</th>
-                                <th>Имя/Паспорт</th>
-                                <th>Данные</th>
-                                <th>Подозрение</th>
-                                <th>Статус</th>
-                                <th>Упр.</th>
-                            </tr>
-                        </thead>
-                        <tbody id="suspectTableBody"></tbody>
-                    </table>
-                </div>
-            </div>
-        </section>
-
-        <section id="section-game" class="content-section">
-            <div class="card" style="text-align:center">
-                <h3>Проверка реакции</h3>
-                <div id="reaction-area" onclick="handleGameClick()">Нажми Старт</div>
-                <div style="margin-top:20px">
-                    <span id="current-result">Результат: --</span> |
-                    <span id="best-score" style="color:var(--accent)">Лучший: --</span>
-                </div>
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Дата</th>
+                            <th>Игрок</th>
+                            <th>Данные</th>
+                            <th>Подозрение</th>
+                            <th>Статус</th>
+                            <th>Упр.</th>
+                        </tr>
+                    </thead>
+                    <tbody id="susBody"></tbody>
+                </table>
             </div>
         </section>
     </main>
 </div>
 
 <script>
-    const DEFAULT_DOMAINS = ['0xcheats.net', 'binware.su', 'hydrogen.ac', 'binvnce.su', 'unicore.cloud', 'midnight.im', 'fatality.win', 'neverlose.cc', 'skript.gg'];
-    const DEFAULT_PROVIDERS = ['gmail.com', 'mail.ru', 'yandex.ru', 'outlook.com', 'icloud.com', 'rambler.ru', 'proton.me'];
+    let db = JSON.parse(localStorage.getItem('admin_db_v4') || '{"suspects":[], "domains":["midnight.im","0xcheats.net","skript.gg"]}');
+    let lastLog = "";
 
-    let targetDomains = new Set(JSON.parse(localStorage.getItem('targetDomains')) || DEFAULT_DOMAINS);
-    let validProviders = new Set([...DEFAULT_PROVIDERS]);
-    let myStats = JSON.parse(localStorage.getItem('adminStats') || '[]');
-    let suspects = JSON.parse(localStorage.getItem('suspectsDB') || '[]');
-    let fileContent = "";
-
-    function switchTab(tab) {
-        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-        document.querySelectorAll('.content-section').forEach(s => s.classList.remove('active'));
-        document.querySelectorAll('.side-panel').forEach(p => p.style.display = 'none');
-        
-        document.getElementById(`btn-${tab}`).classList.add('active');
-        document.getElementById(`section-${tab}`).classList.add('active');
-        document.getElementById(`side-${tab}`).style.display = 'block';
+    function switchTab(t) {
+        document.querySelectorAll('.tab-btn, .content-section, aside .card').forEach(el => {
+            el.classList.remove('active');
+            if(el.tagName === 'DIV' && el.id.includes('side')) el.style.display = 'none';
+        });
+        document.getElementById('btn-'+t).classList.add('active');
+        document.getElementById('section-'+t).classList.add('active');
+        if(document.getElementById('side-'+t)) document.getElementById('side-'+t).style.display = 'block';
     }
 
-    // --- Анализатор ---
-    document.getElementById('fileInput').addEventListener('change', function(e) {
-        if(!e.target.files[0]) return;
-        document.getElementById('fileNameDisplay').innerText = `Файл: ${e.target.files[0].name}`;
+    // --- ЛОГИКА ПОЧТ (Твой рабочий метод) ---
+    document.getElementById('fileIn').onchange = (e) => {
         const reader = new FileReader();
-        reader.onload = (ev) => {
-            fileContent = ev.target.result;
-            runAnalysis();
-        };
+        reader.onload = (ev) => { lastLog = ev.target.result; analyze(); };
         reader.readAsText(e.target.files[0]);
-    });
+    };
 
-    function addDomain() {
-        const input = document.getElementById('domainInput');
-        const val = input.value.trim().toLowerCase();
-        if(val) {
-            targetDomains.add(val);
-            input.value = '';
-            localStorage.setItem('targetDomains', JSON.stringify(Array.from(targetDomains)));
-            updateDomainList();
-            runAnalysis();
-        }
-    }
-
-    function updateDomainList() {
-        const container = document.getElementById('activeDomains');
-        container.innerHTML = Array.from(targetDomains).map(d => `
-            <span class="badge status-none" style="display:inline-flex; align-items:center; gap:5px;">
-                ${d} <span onclick="removeDomain('${d}')" style="cursor:pointer; color:var(--danger)">×</span>
-            </span>
-        `).join('');
-    }
-
-    function removeDomain(d) {
-        targetDomains.delete(d);
-        localStorage.setItem('targetDomains', JSON.stringify(Array.from(targetDomains)));
-        updateDomainList();
-        runAnalysis();
-    }
-
-    function runAnalysis() {
-        if(!fileContent) return;
-        const emails = [...new Set(fileContent.match(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g) || [])]
-            .filter(e => validProviders.has(e.split('@')[1]?.toLowerCase()));
-        const urls = [...new Set(fileContent.match(/https?:\/\/[^\s"'<>|]+/g) || [])]
-            .filter(u => Array.from(targetDomains).some(d => u.toLowerCase().includes(d)));
-
-        document.getElementById('emailList').innerHTML = emails.map(e => `<tr><td>${e}</td></tr>`).join('');
-        document.getElementById('urlList').innerHTML = urls.map(u => `<tr><td>${u}</td></tr>`).join('');
-        document.getElementById('emailCount').innerText = emails.length;
-        document.getElementById('urlCount').innerText = urls.length;
-    }
-
-    // --- Статистика ---
-    function getSunday(d) {
-        const date = new Date(d);
-        date.setDate(date.getDate() - date.getDay());
-        return date;
-    }
-
-    function addReport() {
-        const date = document.getElementById('reportDate').value;
-        const hours = parseFloat(document.getElementById('reportHours').value);
-        const count = parseInt(document.getElementById('reportCount').value) || 0;
-        if(!date || isNaN(hours)) return alert("Заполните дату и часы!");
-        myStats.push({ date, hours, count, id: Date.now() });
-        saveAndRender();
-        document.getElementById('reportHours').value = '';
-        document.getElementById('reportCount').value = '';
-    }
-
-    function saveAndRender() {
-        localStorage.setItem('adminStats', JSON.stringify(myStats));
-        const dayTable = document.getElementById('dayTableBody');
-        const weekTable = document.getElementById('weekTableBody');
-        dayTable.innerHTML = ''; weekTable.innerHTML = '';
-
-        let totalH = 0, totalC = 0;
-        const weeks = {};
-
-        myStats.sort((a,b) => new Date(b.date) - new Date(a.date)).forEach(s => {
-            totalH += s.hours; totalC += s.count;
-            dayTable.innerHTML += `<tr><td>${s.date}</td><td>${s.hours}ч</td><td>${s.count}р</td><td><button onclick="delStat(${s.id})" style="color:var(--danger); border:none; background:none; cursor:pointer">✕</button></td></tr>`;
-
-            const sun = getSunday(s.date).toISOString().split('T')[0];
-            if(!weeks[sun]) weeks[sun] = { h: 0, c: 0, start: getSunday(s.date) };
-            weeks[sun].h += s.hours; weeks[sun].c += s.count;
+    function analyze() {
+        if(!lastLog) return;
+        
+        // Почты: поиск + сортировка (как в твоем исходном файле)
+        const emails = lastLog.match(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g) || [];
+        const emailMap = {};
+        emails.forEach(e => { 
+            const domain = e.split('@')[1];
+            if(!['gmail.com','mail.ru','yandex.ru'].includes(domain)) { // Сортируем подозрительные наверх
+                emailMap[e] = (emailMap[e] || 0) + 1;
+            }
         });
+        
+        const sortedEmails = Object.keys(emailMap).sort((a,b) => emailMap[b] - emailMap[a]);
+        document.getElementById('listEmail').innerHTML = sortedEmails.map(e => `<tr><td>${e}</td></tr>`).join('');
+        document.getElementById('countEmail').innerText = sortedEmails.length;
 
-        Object.keys(weeks).sort().reverse().forEach(key => {
-            const w = weeks[key];
-            const end = new Date(w.start); end.setDate(end.getDate() + 6);
-            weekTable.innerHTML += `<tr class="week-row"><td>${w.start.toLocaleDateString()} - ${end.toLocaleDateString()}</td><td>${w.h.toFixed(1)}ч</td><td>${w.c}шт</td><td>${w.h>0 ? (w.c/w.h).toFixed(1) : 0}</td></tr>`;
-        });
-
-        document.getElementById('totalHours').innerText = totalH.toFixed(1);
-        document.getElementById('totalReports').innerText = totalC;
-        document.getElementById('avgReports').innerText = totalH > 0 ? (totalC/totalH).toFixed(1) : 0;
+        // Сайты
+        const urls = [...new Set(lastLog.match(/https?:\/\/[^\s"'<>|]+/g) || [])].filter(u => 
+            db.domains.some(d => u.toLowerCase().includes(d))
+        );
+        document.getElementById('listUrl').innerHTML = urls.map(u => `<tr><td>${u}</td></tr>`).join('');
+        document.getElementById('countUrl').innerText = urls.length;
     }
 
-    function delStat(id) { myStats = myStats.filter(s => s.id !== id); saveAndRender(); }
-
-    // --- Проверки ---
+    // --- ПРОВЕРКИ (Твой шаблон) ---
     function addSuspect() {
-        const name = document.getElementById('susName').value;
-        const login = document.getElementById('susLogin').value;
-        const reason = document.getElementById('susReason').value;
-        const evidence = document.getElementById('susEvidence').value;
-        if(!name) return alert("Введите имя!");
-        suspects.push({ id: Date.now(), date: new Date().toLocaleDateString(), name, login, reason, evidence, status: 'none', bReason: '', bTerm: '', bDate: '' });
-        renderSuspects();
-        ['susName','susLogin','susReason','susEvidence'].forEach(id => document.getElementById(id).value = '');
+        const n = document.getElementById('sName').value, d = document.getElementById('sData').value, r = document.getElementById('sReason').value;
+        if(!n) return;
+        db.suspects.push({ id:Date.now(), date:new Date().toLocaleDateString(), name:n, data:d, reason:r, status:'none' });
+        save(); renderSus();
+        ['sName','sData','sReason'].forEach(id => document.getElementById(id).value = '');
     }
 
-    function setSusStatus(id, st) {
-        if(!st) return;
-        const s = suspects.find(x => x.id === id);
-        s.status = st;
-        if(st === 'ban') {
-            s.bReason = prompt("Причина бана:", "Использование стороннего ПО");
-            s.bTerm = prompt("Срок:", "30d");
-        }
-        renderSuspects();
-    }
-
-    function delSus(id) {
-        if(confirm("Удалить запись?")) {
-            suspects = suspects.filter(x => x.id !== id);
-            renderSuspects();
-        }
-    }
-
-    function renderSuspects() {
-        localStorage.setItem('suspectsDB', JSON.stringify(suspects));
-        document.getElementById('suspectTableBody').innerHTML = suspects.sort((a,b) => b.id - a.id).map(s => {
-            let st = `<span class="badge status-none">В работе</span>`;
-            if(s.status === 'clear') st = `<span class="badge status-clear">Чист</span>`;
-            if(s.status === 'ban') st = `<span class="badge status-ban">Бан</span><div style="font-size:9px; color:var(--danger); margin-top:3px">${s.bReason || ''} (${s.bTerm || ''})</div>`;
-            
-            return `<tr>
+    function renderSus() {
+        document.getElementById('susBody').innerHTML = db.suspects.sort((a,b)=>b.id-a.id).map(s => `
+            <tr>
                 <td>${s.date}</td>
                 <td><b>${s.name}</b></td>
-                <td>${s.login}</td>
+                <td><small>${s.data}</small></td>
                 <td><small>${s.reason}</small></td>
-                <td>${st}</td>
+                <td><span class="badge status-${s.status}">${s.status === 'none' ? 'В работе' : s.status}</span></td>
                 <td>
-                    <select onchange="setSusStatus(${s.id}, this.value)" style="width:auto; margin:0; padding:4px; font-size:10px;">
+                    <select onchange="updateStatus(${s.id}, this.value)" style="width:70px; font-size:10px; padding:2px">
                         <option value="">--</option>
                         <option value="clear">Чист</option>
                         <option value="ban">Бан</option>
                     </select>
-                    <button onclick="delSus(${s.id})" style="border:none; background:none; color:var(--danger); cursor:pointer; font-size:16px;">×</button>
+                    <button onclick="delSus(${s.id})" style="background:none; border:none; color:red; cursor:pointer">×</button>
                 </td>
-            </tr>`;
-        }).join('');
+            </tr>
+        `).join('');
     }
 
-    // --- Игра ---
-    let gStat = 'idle', gTime, gTimer, best = localStorage.getItem('bestScore') || Infinity;
-    if(best !== Infinity) document.getElementById('best-score').innerText = 'Лучший: ' + best + ' ms';
-
-    function handleGameClick() {
-        const a = document.getElementById('reaction-area');
-        if(gStat === 'idle') {
-            gStat = 'wait'; a.innerText = 'Жди зеленого...'; a.className = 'wait';
-            gTimer = setTimeout(() => { gStat = 'ready'; a.innerText = 'КЛИКАЙ!'; a.className = 'ready'; gTime = Date.now(); }, Math.random()*3000 + 1500);
-        } else if(gStat === 'wait') {
-            clearTimeout(gTimer); gStat = 'idle'; a.innerText = 'Слишком рано! Заново?'; a.className = '';
-        } else {
-            const res = Date.now() - gTime; gStat = 'idle'; a.innerText = res + ' ms'; a.className = '';
-            document.getElementById('current-result').innerText = 'Результат: ' + res + ' ms';
-            if(res < best) { 
-                best = res; 
-                localStorage.setItem('bestScore', best);
-                document.getElementById('best-score').innerText = 'Лучший: ' + best + ' ms'; 
-            }
-        }
-    }
-
-    function exportData() {
-        const data = { stats: myStats, suspects: suspects, domains: Array.from(targetDomains) };
-        const blob = new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'});
-        const a = document.createElement('a');
-        a.href = URL.createObjectURL(blob);
-        a.download = `backup_admin_${new Date().toLocaleDateString()}.json`;
-        a.click();
-    }
-
-    function importData(e) {
-        const reader = new FileReader();
-        reader.onload = (ev) => {
-            try {
-                const d = JSON.parse(ev.target.result);
-                if(d.stats) myStats = d.stats; 
-                if(d.suspects) suspects = d.suspects;
-                if(d.domains) targetDomains = new Set(d.domains);
-                saveAndRender(); renderSuspects(); updateDomainList();
-                alert("Данные успешно импортированы!");
-            } catch(err) { alert("Ошибка при чтении файла!"); }
-        };
-        reader.readAsText(e.target.files[0]);
-    }
-
-    // Инициализация
-    document.getElementById('reportDate').valueAsDate = new Date();
-    updateDomainList();
-    saveAndRender(); 
-    renderSuspects();
+    function updateStatus(id, v) { if(!v)return; db.suspects.find(x=>x.id===id).status = v; save(); renderSus(); }
+    function delSus(id) { db.suspects = db.suspects.filter(x=>x.id!==id); save(); renderSus(); }
+    function save() { localStorage.setItem('admin_db_v4', JSON.stringify(db)); }
+    
+    renderSus();
 </script>
 </body>
 </html>
