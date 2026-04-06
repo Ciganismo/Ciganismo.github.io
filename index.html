@@ -10,23 +10,18 @@
             --text-white: #ffffff; --border: #27272a; --danger: #ef4444;
             --success: #10b981; --row-hover: #222222;
         }
-
         body { font-family: 'Segoe UI', sans-serif; background-color: var(--bg-body); color: var(--text-main); margin: 0; font-size: 13px; }
         .hidden { display: none !important; }
 
-        /* Вход */
         #login-overlay { position: fixed; inset: 0; background: var(--bg-body); z-index: 9999; display: flex; align-items: center; justify-content: center; }
         .login-box { background: var(--bg-panel); padding: 40px; border-radius: 12px; border: 1px solid var(--border); text-align: center; }
 
-        /* Шапка */
         .admin-header { background: var(--bg-header); height: 65px; display: flex; align-items: center; padding: 0 40px; border-bottom: 2px solid var(--accent); justify-content: space-between; }
         .logo-area { font-weight: bold; color: var(--text-white); font-size: 1.2rem; }
         .logo-area span { color: var(--accent); }
         .user-avatar { width: 35px; height: 35px; border-radius: 50%; border: 1px solid var(--accent); }
 
-        /* Сетка */
         .wrapper { padding: 25px 40px; display: grid; grid-template-columns: 280px 1fr; gap: 25px; }
-        
         .nav-menu { display: flex; flex-direction: column; gap: 8px; }
         .nav-btn { background: transparent; border: 1px solid transparent; color: var(--text-main); padding: 12px; text-align: left; cursor: pointer; border-radius: 4px; font-weight: 600; text-transform: uppercase; font-size: 0.8rem; }
         .nav-btn.active { background: var(--bg-panel); border-color: var(--border); color: var(--accent); }
@@ -36,10 +31,14 @@
         
         input, textarea, select { width: 100%; background: #000; border: 1px solid var(--border); padding: 10px; color: #fff; margin-bottom: 10px; box-sizing: border-box; }
 
-        .table-container { background: var(--bg-panel); border: 1px solid var(--border); border-radius: 4px; margin-bottom: 20px; }
+        .table-container { background: var(--bg-panel); border: 1px solid var(--border); border-radius: 4px; margin-bottom: 20px; overflow: hidden; }
         .table-header { background: #222; padding: 12px 20px; font-weight: bold; display: flex; justify-content: space-between; }
         .data-table { width: 100%; border-collapse: collapse; }
-        .data-table td { padding: 10px 20px; border-bottom: 1px solid var(--border); }
+        .data-table td, .data-table th { padding: 12px 20px; border-bottom: 1px solid var(--border); text-align: left; }
+        
+        .badge { padding: 4px 8px; border-radius: 2px; font-size: 10px; font-weight: bold; text-transform: uppercase; }
+        .status-ban { background: rgba(239, 68, 68, 0.2); color: var(--danger); border: 1px solid var(--danger); }
+        .status-clear { background: rgba(16, 185, 129, 0.2); color: var(--success); border: 1px solid var(--success); }
 
         #reaction-area { width: 100%; height: 200px; border: 2px dashed var(--border); display: flex; align-items: center; justify-content: center; font-size: 20px; cursor: pointer; }
         #reaction-area.wait { background: var(--danger); }
@@ -57,45 +56,109 @@
 
 <div id="app" class="hidden">
     <header class="admin-header">
-        <div class="logo-area">GTA<span>5</span> RP</div>
+        <div class="logo-area">GTA<span>5</span> RP <span id="dbStatus" style="font-size:10px; opacity:0.5; margin-left:10px;">Gist Sync...</span></div>
         <div id="userDisplay" style="display:flex; align-items:center; gap:10px"></div>
     </header>
 
     <div class="wrapper">
         <aside>
-            <div id="dynamic-menu" class="nav-menu">
+            <nav class="nav-menu">
+                <button class="nav-btn active" id="btn-analyzer" onclick="showTab('analyzer')">🔍 Анализатор</button>
+                <button class="nav-btn" id="btn-stats" onclick="showTab('stats')">📊 Статистика</button>
+                <button class="nav-btn" id="btn-checks" onclick="showTab('checks')">⚖️ Проверки</button>
+                <button class="nav-btn" id="btn-game" onclick="showTab('game')">⚡ Реакция</button>
+            </nav>
+            <div class="side-panel" style="margin-top:20px">
+                <div id="side-analyzer">
+                    <h3>Домены</h3>
+                    <input type="text" id="domIn" placeholder="Домен...">
+                    <button class="btn-orange" onclick="addDomain()">Добавить</button>
                 </div>
-            <div class="side-panel" style="margin-top:20px" id="side-content">
+                <div id="side-stats" class="hidden">
+                    <h3>Новая смена</h3>
+                    <input type="date" id="repDate">
+                    <input type="number" id="repHours" step="0.1" placeholder="Часы">
+                    <input type="number" id="repCount" placeholder="Репорты">
+                    <button class="btn-orange" onclick="addStat()">Записать</button>
                 </div>
+                <div id="side-checks" class="hidden">
+                    <h3>Внести игрока</h3>
+                    <input type="text" id="susName" placeholder="Ник #ID">
+                    <textarea id="susReason" placeholder="Причина..."></textarea>
+                    <button class="btn-orange" onclick="addSus()">Добавить</button>
+                </div>
+                <div id="side-game" class="hidden">
+                    <h3>Тренировка</h3>
+                    <p>Проверь реакцию.</p>
+                </div>
+            </div>
             <button onclick="logout()" style="width:100%; background:none; border:none; color:#444; margin-top:20px; cursor:pointer">ВЫХОД</button>
         </aside>
 
-        <main id="main-content">
-            </main>
+        <main>
+            <section id="tab-analyzer">
+                <div class="table-container" style="border: 2px dashed #333; padding: 40px; text-align: center; cursor: pointer;" onclick="document.getElementById('fileInput').click()">
+                    <strong>ВЫБЕРИТЕ .TXT ФАЙЛ</strong>
+                    <input type="file" id="fileInput" accept=".txt" class="hidden">
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                    <div class="table-container">
+                        <div class="table-header">Сайты <span id="urlCount">0</span></div>
+                        <table class="data-table"><tbody id="urlList"></tbody></table>
+                    </div>
+                    <div class="table-container">
+                        <div class="table-header">Почты <span id="emailCount">0</span></div>
+                        <table class="data-table"><tbody id="emailList"></tbody></table>
+                    </div>
+                </div>
+            </section>
+
+            <section id="tab-stats" class="hidden">
+                <div class="table-container">
+                    <div class="table-header">Итоги по неделям</div>
+                    <table class="data-table">
+                        <thead><tr><th>Период</th><th>Часы</th><th>Репорты</th><th>Р/Ч</th></tr></thead>
+                        <tbody id="weekBody"></tbody>
+                    </table>
+                </div>
+                <div class="table-container">
+                    <div class="table-header">История</div>
+                    <table class="data-table"><tbody id="dayBody"></tbody></table>
+                </div>
+            </section>
+
+            <section id="tab-checks" class="hidden">
+                <div class="table-container">
+                    <div class="table-header">База проверок</div>
+                    <table class="data-table">
+                        <thead><tr><th>Дата</th><th>Игрок</th><th>Статус</th><th>Действие</th></tr></thead>
+                        <tbody id="susBody"></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <section id="tab-game" class="hidden">
+                <div class="table-container" style="padding:20px">
+                    <div id="reaction-area" onclick="gameClick()">Нажми для начала</div>
+                </div>
+            </section>
+        </main>
     </div>
 </div>
 
 <script>
     const CLIENT_ID = '1490783084243587163';
     const REDIRECT_URI = window.location.origin + window.location.pathname;
+    let currentUser = null, myStats = [], suspects = [], lastContent = "";
+    let targetDomains = new Set(['0xcheats.net', 'midnight.im', 'skript.gg']);
 
-    let currentUser = null;
-    let tabs = ['analyzer', 'stats', 'checks', 'game'];
-    let tabNames = { analyzer: '🔍 Анализатор', stats: '📊 Статистика', checks: '⚖️ Проверки', game: '⚡ Реакция' };
-
-    function discordLogin() {
-        window.location.href = `https://discord.com/api/oauth2/authorize?client_id=${CLIENT_ID}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&response_type=token&scope=identify`;
-    }
+    function discordLogin() { window.location.href = `https://discord.com/api/oauth2/authorize?client_id=${CLIENT_ID}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&response_type=token&scope=identify`; }
 
     window.onload = () => {
         const token = new URLSearchParams(window.location.hash.slice(1)).get('access_token');
         if (token) {
             fetch('https://discord.com/api/users/@me', { headers: { Authorization: `Bearer ${token}` } })
-                .then(r => r.json()).then(user => {
-                    localStorage.setItem('adm_user', JSON.stringify(user));
-                    window.location.hash = '';
-                    init(user);
-                });
+                .then(r => r.json()).then(user => { localStorage.setItem('adm_user', JSON.stringify(user)); window.location.hash = ''; init(user); });
         } else {
             const saved = localStorage.getItem('adm_user');
             if (saved) init(JSON.parse(saved));
@@ -106,58 +169,78 @@
         currentUser = user;
         document.getElementById('login-overlay').classList.add('hidden');
         document.getElementById('app').classList.remove('hidden');
-        
         document.getElementById('userDisplay').innerHTML = `<span>${user.username}</span><img src="https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png" class="user-avatar">`;
-        
-        renderMenu();
-        showTab('analyzer');
-    }
-
-    function renderMenu() {
-        const menu = document.getElementById('dynamic-menu');
-        menu.innerHTML = tabs.map(t => `
-            <button class="nav-btn" id="btn-${t}" onclick="showTab('${t}')">${tabNames[t]}</button>
-        `).join('');
+        myStats = JSON.parse(localStorage.getItem(user.id + '_stats') || '[]');
+        suspects = JSON.parse(localStorage.getItem(user.id + '_suspects') || '[]');
+        document.getElementById('repDate').valueAsDate = new Date();
+        showTab('analyzer'); renderStats(); renderSus();
     }
 
     function showTab(name) {
-        // Сброс кнопок
+        document.querySelectorAll('section, .side-panel > div').forEach(el => el.classList.add('hidden'));
         document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById('tab-' + name).classList.remove('hidden');
+        document.getElementById('side-' + name).classList.remove('hidden');
         document.getElementById('btn-' + name).classList.add('active');
-
-        // Отрисовка контента правой части
-        const main = document.getElementById('main-content');
-        const side = document.getElementById('side-content');
-
-        if (name === 'analyzer') {
-            side.innerHTML = `<h3>Домены</h3><input type="text" id="domIn" placeholder="Домен..."><button class="btn-orange" onclick="alert('Добавлено')">Добавить</button>`;
-            main.innerHTML = `<div class="table-container"><div class="table-header">Анализатор файлов</div><div style="padding:40px; text-align:center; border:2px dashed #333" onclick="alert('Выберите файл')">Нажмите для загрузки лога (.txt)</div></div>`;
-        } 
-        else if (name === 'stats') {
-            side.innerHTML = `<h3>Отчет</h3><input type="date" id="d"><input type="number" placeholder="Часы"><input type="number" placeholder="Репорты"><button class="btn-orange">Сохранить</button>`;
-            main.innerHTML = `<div class="table-container"><div class="table-header">Ваша статистика</div><table class="data-table"><tr><td>Тут будут ваши отчеты за неделю...</td></tr></table></div>`;
-        }
-        else if (name === 'checks') {
-            side.innerHTML = `<h3>Проверка</h3><input type="text" placeholder="Ник #ID"><textarea placeholder="Причина"></textarea><button class="btn-orange">В базу</button>`;
-            main.innerHTML = `<div class="table-container"><div class="table-header">База проверок</div><table class="data-table"><tr><td>Список пуст...</td></tr></table></div>`;
-        }
-        else if (name === 'game') {
-            side.innerHTML = `<h3>Тренировка</h3><p>Нажми на поле, когда оно станет зеленым.</p>`;
-            main.innerHTML = `<div class="table-container" style="padding:20px"><div id="reaction-area" onclick="gameClick()">Нажми, чтобы начать</div></div>`;
-        }
     }
+
+    // Анализатор
+    document.getElementById('fileInput').onchange = e => {
+        const reader = new FileReader();
+        reader.onload = ev => { lastContent = ev.target.result; runAnalysis(); };
+        reader.readAsText(e.target.files[0]);
+    };
+    function addDomain() { const d = document.getElementById('domIn').value; if(d){targetDomains.add(d); runAnalysis();} }
+    function runAnalysis() {
+        const emails = [...new Set(lastContent.match(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g) || [])];
+        const urls = [...new Set(lastContent.match(/https?:\/\/[^\s"'<>|]+/g) || [])].filter(u => [...targetDomains].some(d => u.includes(d)));
+        document.getElementById('urlList').innerHTML = urls.map(u => `<tr><td>${u}</td></tr>`).join('');
+        document.getElementById('emailList').innerHTML = emails.map(e => `<tr><td>${e}</td></tr>`).join('');
+        document.getElementById('urlCount').innerText = urls.length;
+        document.getElementById('emailCount').innerText = emails.length;
+    }
+
+    // Статистика
+    function addStat() {
+        const d = document.getElementById('repDate').value, h = parseFloat(document.getElementById('repHours').value), c = parseInt(document.getElementById('repCount').value) || 0;
+        if(d && h) { myStats.push({id:Date.now(), d, h, c}); save(); renderStats(); }
+    }
+    function renderStats() {
+        const dBody = document.getElementById('dayBody'), wBody = document.getElementById('weekBody');
+        dBody.innerHTML = ''; wBody.innerHTML = '';
+        const weeks = {};
+        myStats.sort((a,b)=>new Date(b.d)-new Date(a.d)).forEach(s => {
+            dBody.innerHTML += `<tr><td>${s.d}</td><td>${s.h}ч</td><td>${s.c}р</td><td><button onclick="delStat(${s.id})" style="color:red;background:none;border:none;cursor:pointer">✕</button></td></tr>`;
+            const date = new Date(s.d); date.setDate(date.getDate() - date.getDay());
+            const wk = date.toISOString().split('T')[0];
+            if(!weeks[wk]) weeks[wk] = {h:0, c:0}; weeks[wk].h += s.h; weeks[wk].c += s.c;
+        });
+        Object.keys(weeks).forEach(k => { wBody.innerHTML += `<tr style="color:var(--accent)"><td>${k}</td><td>${weeks[k].h}</td><td>${weeks[k].c}</td><td>${(weeks[k].c/weeks[k].h).toFixed(1)}</td></tr>`; });
+    }
+
+    // Проверки
+    function addSus() { const n = document.getElementById('susName').value; if(n){suspects.push({id:Date.now(), date:new Date().toLocaleDateString(), name:n, status:'check'}); save(); renderSus();} }
+    function renderSus() {
+        document.getElementById('susBody').innerHTML = suspects.map(s => `
+            <tr><td>${s.date}</td><td><b>${s.name}</b></td>
+            <td><span class="badge ${s.status==='ban'?'status-ban':'status-clear'}">${s.status}</span></td>
+            <td>
+                <select onchange="updateSus(${s.id}, this.value)" style="width:60px"><option>...</option><option value="clear">Чист</option><option value="ban">Бан</option></select>
+                <button onclick="delSus(${s.id})" style="color:red;background:none;border:none;cursor:pointer;margin-left:10px">✕</button>
+            </td></tr>`).join('');
+    }
+
+    function updateSus(id, v) { suspects.find(x=>x.id===id).status=v; save(); renderSus(); }
+    function delStat(id) { myStats = myStats.filter(x=>x.id!==id); save(); renderStats(); }
+    function delSus(id) { suspects = suspects.filter(x=>x.id!==id); save(); renderSus(); }
+    function save() { if(currentUser) { localStorage.setItem(currentUser.id + '_stats', JSON.stringify(myStats)); localStorage.setItem(currentUser.id + '_suspects', JSON.stringify(suspects)); } }
 
     let gStat = 'idle', gTime;
     function gameClick() {
         const a = document.getElementById('reaction-area');
-        if(gStat === 'idle') {
-            gStat = 'wait'; a.innerText = 'ЖДИ...'; a.className = 'wait';
-            setTimeout(() => { gStat = 'ready'; a.innerText = 'ЖМИ!'; a.className = 'ready'; gTime = Date.now(); }, Math.random()*2000 + 1000);
-        } else if(gStat === 'ready') {
-            a.innerText = (Date.now() - gTime) + 'ms'; gStat = 'idle'; a.className = '';
-        }
+        if(gStat==='idle') { gStat='wait'; a.innerText='ЖДИ...'; a.className='wait'; setTimeout(()=>{gStat='ready'; a.innerText='ЖМИ!'; a.className='ready'; gTime=Date.now();}, Math.random()*2000+1000); }
+        else if(gStat==='ready') { a.innerText = (Date.now()-gTime)+'ms'; gStat='idle'; a.className=''; }
     }
-
     function logout() { localStorage.removeItem('adm_user'); window.location.reload(); }
 </script>
 </body>
