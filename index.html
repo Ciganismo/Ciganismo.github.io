@@ -205,6 +205,8 @@
         currentUser = user;
         document.getElementById('login-overlay').classList.add('hidden');
         document.getElementById('app').classList.remove('hidden');
+        
+        // Загрузка данных
         myStats = JSON.parse(localStorage.getItem(user.id + '_stats') || '[]');
         suspects = JSON.parse(localStorage.getItem(user.id + '_suspects') || '[]');
         
@@ -212,7 +214,12 @@
             <div style="text-align:right"><b style="color:white">${user.username}</b><br><span style="color:var(--accent); font-size:10px">ID: ${user.id}</span></div>
             <img src="https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png" class="user-avatar">
         `;
-        syncGist(); renderStats(); renderSuspects(); updateDomainUI();
+        
+        syncGist();
+        showTab('analyzer'); // ОБЯЗАТЕЛЬНО: Включаем интерфейс
+        renderStats();
+        renderSuspects();
+        updateDomainUI();
         document.getElementById('repDate').valueAsDate = new Date();
     }
 
@@ -226,14 +233,18 @@
     }
 
     function showTab(name) {
-        document.querySelectorAll('section, .side-panel > div').forEach(el => el.classList.add('hidden'));
+        // Прячем всё
+        document.querySelectorAll('section').forEach(el => el.classList.add('hidden'));
+        document.querySelectorAll('.side-panel > div').forEach(el => el.classList.add('hidden'));
         document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+        
+        // Показываем нужное
         document.getElementById('tab-' + name).classList.remove('hidden');
         document.getElementById('side-' + name).classList.remove('hidden');
         document.getElementById('btn-' + name).classList.add('active');
     }
 
-    // --- АНАЛИЗАТОР ---
+    // --- ЛОГИКА АНАЛИЗАТОРА ---
     document.getElementById('fileInput').onchange = e => {
         const reader = new FileReader();
         reader.onload = ev => { lastFile = ev.target.result; runAnalysis(); };
@@ -247,7 +258,7 @@
 
     function updateDomainUI() {
         document.getElementById('activeDomains').innerHTML = Array.from(targetDomains).map(d => `
-            <div class="domain-tag">${d}<span onclick="targetDomains.delete('${d}'); updateDomainUI(); runAnalysis();">✕</span></div>
+            <div class="domain-tag">${d}<span onclick="targetDomains.delete('${d}'); updateDomainUI(); runAnalysis();" style="cursor:pointer; margin-left:5px">✕</span></div>
         `).join('');
     }
 
@@ -264,7 +275,7 @@
         document.getElementById('emailCount').innerText = emails.length;
     }
 
-    // --- СТАТИСТИКА ---
+    // --- ЛОГИКА СТАТИСТИКИ ---
     function addReport() {
         const date = document.getElementById('repDate').value;
         const h = parseFloat(document.getElementById('repHours').value);
@@ -273,48 +284,54 @@
     }
 
     function renderStats() {
+        if(!currentUser) return;
         localStorage.setItem(currentUser.id + '_stats', JSON.stringify(myStats));
         const dayBody = document.getElementById('dayTableBody');
         const weekBody = document.getElementById('weekTableBody');
         dayBody.innerHTML = ''; weekBody.innerHTML = '';
         const weeks = {};
+        
         myStats.sort((a,b) => new Date(b.date) - new Date(a.date)).forEach(s => {
             dayBody.innerHTML += `<tr><td>${s.date}</td><td>${s.h}ч</td><td>${s.c}р</td><td><button onclick="myStats=myStats.filter(x=>x.id!=${s.id});renderStats()" style="color:red; background:none; border:none; cursor:pointer">✕</button></td></tr>`;
             const d = new Date(s.date); d.setDate(d.getDate() - d.getDay());
             const wk = d.toISOString().split('T')[0];
             if(!weeks[wk]) weeks[wk] = {h:0, c:0}; weeks[wk].h += s.h; weeks[wk].c += s.c;
         });
-        Object.keys(weeks).forEach(k => {
-            weekBody.innerHTML += `<tr style="color:var(--accent); font-weight:bold"><td>${k}</td><td>${weeks[k].h.toFixed(1)}</td><td>${weeks[k].c}</td><td>${(weeks[k].c/weeks[k].h || 0).toFixed(1)}</td></tr>`;
+        
+        Object.keys(weeks).sort().reverse().forEach(k => {
+            const w = weeks[k];
+            weekBody.innerHTML += `<tr style="color:var(--accent); font-weight:bold"><td>Неделя ${k}</td><td>${w.h.toFixed(1)}ч</td><td>${w.c}р</td><td>${(w.c/w.h || 0).toFixed(1)} р/ч</td></tr>`;
         });
     }
 
-    // --- ПРОВЕРКИ ---
+    // --- ЛОГИКА ПРОВЕРОК ---
     function addSuspect() {
         const name = document.getElementById('susName').value;
-        if(name) { suspects.push({id: Date.now(), date: new Date().toLocaleDateString(), name, status: 'check'}); renderSuspects(); }
+        const reason = document.getElementById('susReason').value;
+        if(name) { suspects.push({id: Date.now(), date: new Date().toLocaleDateString(), name, reason, status: 'check'}); renderSuspects(); }
     }
 
     function renderSuspects() {
+        if(!currentUser) return;
         localStorage.setItem(currentUser.id + '_suspects', JSON.stringify(suspects));
         document.getElementById('suspectBody').innerHTML = suspects.map(s => `
-            <tr><td>${s.date}</td><td>${s.name}</td>
+            <tr><td>${s.date}</td><td><b>${s.name}</b></td>
             <td><span class="badge ${s.status==='ban'?'status-ban':'status-clear'}">${s.status}</span></td>
             <td>
                 <select onchange="suspects.find(x=>x.id===${s.id}).status=this.value; renderSuspects()" style="width:70px; font-size:10px">
-                    <option>Статус</option><option value="clear">Чист</option><option value="ban">Бан</option>
+                    <option>...</option><option value="clear">Чист</option><option value="ban">Бан</option>
                 </select>
-                <button onclick="suspects=suspects.filter(x=>x.id!=${s.id});renderSuspects()" style="color:red; background:none; border:none; cursor:pointer">✕</button>
+                <button onclick="suspects=suspects.filter(x=>x.id!=${s.id});renderSuspects()" style="color:red; background:none; border:none; cursor:pointer; margin-left:10px">✕</button>
             </td></tr>
         `).join('');
     }
 
-    // --- ИГРА ---
+    // --- ЛОГИКА ИГРЫ ---
     let gStat = 'idle', gTime, gTimer;
     function handleGameClick() {
         const area = document.getElementById('reaction-area');
         if(gStat === 'idle') {
-            gStat = 'wait'; area.innerText = 'ЖДИ...'; area.className = 'wait';
+            gStat = 'wait'; area.innerText = 'ЖДИ ЗЕЛЕНОГО...'; area.className = 'wait';
             gTimer = setTimeout(() => { gStat = 'ready'; area.innerText = 'ЖМИ!'; area.className = 'ready'; gTime = Date.now(); }, Math.random()*3000 + 2000);
         } else if(gStat === 'ready') {
             const res = Date.now() - gTime; gStat = 'idle'; area.innerText = res + 'ms'; area.className = '';
@@ -325,7 +342,9 @@
     function logout() { localStorage.removeItem('adm_user'); window.location.reload(); }
     function copyEmails() {
         const items = Array.from(document.querySelectorAll('#emailList td')).map(td => td.innerText);
-        navigator.clipboard.writeText(items.join('\n')).then(() => alert('Почты скопированы!'));
+        if(items.length) {
+            navigator.clipboard.writeText(items.join('\n')).then(() => alert('Скопировано!'));
+        }
     }
 </script>
 </body>
