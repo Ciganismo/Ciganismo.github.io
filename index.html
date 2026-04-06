@@ -36,10 +36,14 @@
         
         input, textarea, select { width: 100%; background: #000; border: 1px solid var(--border); padding: 10px; color: #fff; margin-bottom: 10px; box-sizing: border-box; }
 
-        .table-container { background: var(--bg-panel); border: 1px solid var(--border); border-radius: 4px; margin-bottom: 20px; }
+        .table-container { background: var(--bg-panel); border: 1px solid var(--border); border-radius: 4px; margin-bottom: 20px; overflow: hidden; }
         .table-header { background: #222; padding: 12px 20px; font-weight: bold; display: flex; justify-content: space-between; }
         .data-table { width: 100%; border-collapse: collapse; }
-        .data-table td { padding: 10px 20px; border-bottom: 1px solid var(--border); }
+        .data-table td, .data-table th { padding: 12px 20px; border-bottom: 1px solid var(--border); text-align: left; }
+        
+        .badge { padding: 4px 8px; border-radius: 2px; font-size: 10px; font-weight: bold; text-transform: uppercase; }
+        .status-ban { background: rgba(239, 68, 68, 0.2); color: var(--danger); border: 1px solid var(--danger); }
+        .status-clear { background: rgba(16, 185, 129, 0.2); color: var(--success); border: 1px solid var(--success); }
 
         #reaction-area { width: 100%; height: 200px; border: 2px dashed var(--border); display: flex; align-items: center; justify-content: center; font-size: 20px; cursor: pointer; }
         #reaction-area.wait { background: var(--danger); }
@@ -63,15 +67,17 @@
 
     <div class="wrapper">
         <aside>
-            <div id="dynamic-menu" class="nav-menu">
-                </div>
-            <div class="side-panel" style="margin-top:20px" id="side-content">
-                </div>
+            <div class="nav-menu">
+                <button class="nav-btn" id="btn-analyzer" onclick="showTab('analyzer')">🔍 Анализатор</button>
+                <button class="nav-btn" id="btn-stats" onclick="showTab('stats')">📊 Статистика</button>
+                <button class="nav-btn" id="btn-checks" onclick="showTab('checks')">⚖️ Проверки</button>
+                <button class="nav-btn" id="btn-game" onclick="showTab('game')">⚡ Реакция</button>
+            </div>
+            <div class="side-panel" style="margin-top:20px" id="side-content"></div>
             <button onclick="logout()" style="width:100%; background:none; border:none; color:#444; margin-top:20px; cursor:pointer">ВЫХОД</button>
         </aside>
 
-        <main id="main-content">
-            </main>
+        <main id="main-content"></main>
     </div>
 </div>
 
@@ -80,8 +86,7 @@
     const REDIRECT_URI = window.location.origin + window.location.pathname;
 
     let currentUser = null;
-    let tabs = ['analyzer', 'stats', 'checks', 'game'];
-    let tabNames = { analyzer: '🔍 Анализатор', stats: '📊 Статистика', checks: '⚖️ Проверки', game: '⚡ Реакция' };
+    let myStats = [], suspects = [];
 
     function discordLogin() {
         window.location.href = `https://discord.com/api/oauth2/authorize?client_id=${CLIENT_ID}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&response_type=token&scope=identify`;
@@ -106,40 +111,32 @@
         currentUser = user;
         document.getElementById('login-overlay').classList.add('hidden');
         document.getElementById('app').classList.remove('hidden');
-        
         document.getElementById('userDisplay').innerHTML = `<span>${user.username}</span><img src="https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png" class="user-avatar">`;
         
-        renderMenu();
+        myStats = JSON.parse(localStorage.getItem(user.id + '_stats') || '[]');
+        suspects = JSON.parse(localStorage.getItem(user.id + '_suspects') || '[]');
+        
         showTab('analyzer');
     }
 
-    function renderMenu() {
-        const menu = document.getElementById('dynamic-menu');
-        menu.innerHTML = tabs.map(t => `
-            <button class="nav-btn" id="btn-${t}" onclick="showTab('${t}')">${tabNames[t]}</button>
-        `).join('');
-    }
-
     function showTab(name) {
-        // Сброс кнопок
         document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
         document.getElementById('btn-' + name).classList.add('active');
 
-        // Отрисовка контента правой части
         const main = document.getElementById('main-content');
         const side = document.getElementById('side-content');
 
         if (name === 'analyzer') {
-            side.innerHTML = `<h3>Домены</h3><input type="text" id="domIn" placeholder="Домен..."><button class="btn-orange" onclick="alert('Добавлено')">Добавить</button>`;
-            main.innerHTML = `<div class="table-container"><div class="table-header">Анализатор файлов</div><div style="padding:40px; text-align:center; border:2px dashed #333" onclick="alert('Выберите файл')">Нажмите для загрузки лога (.txt)</div></div>`;
+            side.innerHTML = `<h3>Домены</h3><input type="text" id="domIn" placeholder="Домен..."><button class="btn-orange">Добавить</button>`;
+            main.innerHTML = `<div class="table-container"><div class="table-header">Анализатор</div><div style="padding:40px; text-align:center; border:2px dashed #333">Нажмите для загрузки лога (.txt)</div></div>`;
         } 
         else if (name === 'stats') {
-            side.innerHTML = `<h3>Отчет</h3><input type="date" id="d"><input type="number" placeholder="Часы"><input type="number" placeholder="Репорты"><button class="btn-orange">Сохранить</button>`;
-            main.innerHTML = `<div class="table-container"><div class="table-header">Ваша статистика</div><table class="data-table"><tr><td>Тут будут ваши отчеты за неделю...</td></tr></table></div>`;
+            side.innerHTML = `<h3>Новая смена</h3><input type="date" id="rD"><input type="number" id="rH" placeholder="Часы"><input type="number" id="rC" placeholder="Репорты"><button class="btn-orange" onclick="addStat()">Записать</button>`;
+            renderStatsTable();
         }
         else if (name === 'checks') {
-            side.innerHTML = `<h3>Проверка</h3><input type="text" placeholder="Ник #ID"><textarea placeholder="Причина"></textarea><button class="btn-orange">В базу</button>`;
-            main.innerHTML = `<div class="table-container"><div class="table-header">База проверок</div><table class="data-table"><tr><td>Список пуст...</td></tr></table></div>`;
+            side.innerHTML = `<h3>Внести игрока</h3><input type="text" id="sN" placeholder="Имя_Фамилия #ID"><textarea id="sR" placeholder="Причина..."></textarea><button class="btn-orange" onclick="addSus()">Добавить</button>`;
+            renderSusTable();
         }
         else if (name === 'game') {
             side.innerHTML = `<h3>Тренировка</h3><p>Нажми на поле, когда оно станет зеленым.</p>`;
@@ -147,6 +144,48 @@
         }
     }
 
+    // --- СТАТИСТИКА ---
+    function addStat() {
+        const d = document.getElementById('rD').value, h = parseFloat(document.getElementById('rH').value), c = parseInt(document.getElementById('rC').value);
+        if(d && h) { myStats.push({id:Date.now(), d, h, c}); save(); renderStatsTable(); }
+    }
+    function renderStatsTable() {
+        const main = document.getElementById('main-content');
+        let html = `<div class="table-container"><div class="table-header">История смен</div><table class="data-table">`;
+        myStats.sort((a,b)=>new Date(b.d)-new Date(a.d)).forEach(s => {
+            html += `<tr><td>${s.d}</td><td>${s.h}ч</td><td>${s.c}р</td><td><button onclick="delStat(${s.id})" style="color:red;background:none;border:none;cursor:pointer">✕</button></td></tr>`;
+        });
+        main.innerHTML = html + `</table></div>`;
+    }
+
+    // --- ПРОВЕРКИ ---
+    function addSus() {
+        const n = document.getElementById('sN').value;
+        if(n) { suspects.push({id:Date.now(), date:new Date().toLocaleDateString(), name:n, status:'check'}); save(); renderSusTable(); }
+    }
+    function renderSusTable() {
+        const main = document.getElementById('main-content');
+        let html = `<div class="table-container"><div class="table-header">База проверок</div><table class="data-table"><thead><tr><th>Дата</th><th>Игрок</th><th>Статус</th><th>Действие</th></tr></thead>`;
+        suspects.forEach(s => {
+            html += `<tr><td>${s.date}</td><td><b>${s.name}</b></td>
+            <td><span class="badge ${s.status==='ban'?'status-ban':'status-clear'}">${s.status}</span></td>
+            <td>
+                <select onchange="updateSus(${s.id}, this.value)" style="width:70px; font-size:10px"><option>...</option><option value="clear">Чист</option><option value="ban">Бан</option></select>
+                <button onclick="delSus(${s.id})" style="color:red;background:none;border:none;margin-left:10px;cursor:pointer">✕</button>
+            </td></tr>`;
+        });
+        main.innerHTML = html + `</table></div>`;
+    }
+
+    // --- ВСПОМОГАТЕЛЬНЫЕ ---
+    function updateSus(id, val) { const s = suspects.find(x=>x.id===id); if(s){s.status=val; save(); renderSusTable();} }
+    function delStat(id) { myStats = myStats.filter(x=>x.id!==id); save(); renderStatsTable(); }
+    function delSus(id) { suspects = suspects.filter(x=>x.id!==id); save(); renderSusTable(); }
+    function save() { 
+        localStorage.setItem(currentUser.id + '_stats', JSON.stringify(myStats)); 
+        localStorage.setItem(currentUser.id + '_suspects', JSON.stringify(suspects)); 
+    }
+    
     let gStat = 'idle', gTime;
     function gameClick() {
         const a = document.getElementById('reaction-area');
@@ -157,7 +196,6 @@
             a.innerText = (Date.now() - gTime) + 'ms'; gStat = 'idle'; a.className = '';
         }
     }
-
     function logout() { localStorage.removeItem('adm_user'); window.location.reload(); }
 </script>
 </body>
