@@ -353,9 +353,216 @@ async function initFirestore() {
     window._fsDoc = doc; window._fsGetDoc = getDoc; window._fsSetDoc = setDoc;
 }
 
-// ... ОСТАЛЬНАЯ ЛОГИКА ...
-// (checkAuth, showApp, saveUserDB, loadUserDB, analyzer logic, и т.д.)
-// [Пропустил для вставки в ваш файл]
+async function loadUserDB() {
+    try {
+        showSyncStatus('⏳ Загрузка...');
+        const ref = window._fsDoc(db, 'users', currentUserId);
+        const snap = await window._fsGetDoc(ref);
+        if (snap.exists()) {
+            const data = snap.data();
+            myStats  = data.stats   || [];
+            suspects = data.suspects || [];
+        } else {
+            myStats = []; suspects = [];
+        }
+        showSyncStatus('✅ Синхронизировано');
+    } catch(e) {
+        console.error('Firestore load error:', e);
+        showSyncStatus('⚠️ Ошибка загрузки');
+    }
+}
+
+async function saveUserDB() {
+    if (!db || !currentUserId) return;
+    try {
+        showSyncStatus('💾 Сохранение...');
+        const ref = window._fsDoc(db, 'users', currentUserId);
+        await window._fsSetDoc(ref, { stats: myStats, suspects: suspects }, { merge: true });
+        showSyncStatus('✅ Сохранено в облако');
+    } catch(e) {
+        console.error('Firestore save error:', e);
+        showSyncStatus('⚠️ Ошибка сохранения');
+    }
+}
+
+// Белый список тоже в Firestore
+async function getAccessList() {
+    try {
+        const ref = window._fsDoc(db, 'config', 'accessList');
+        const snap = await window._fsGetDoc(ref);
+        return snap.exists() ? (snap.data().list || []) : [];
+    } catch { return []; }
+}
+async function saveAccessList(list) {
+    try {
+        const ref = window._fsDoc(db, 'config', 'accessList');
+        await window._fsSetDoc(ref, { list });
+    } catch(e) { console.error(e); }
+}
+async function hasAccess(discordId) {
+    if (!discordId) return false;
+    if (discordId === OWNER_DISCORD_ID) return true;
+    const list = await getAccessList();
+    return list.some(u => u.id === discordId);
+}
+
+function showSyncStatus(msg) {
+    let el = document.getElementById('sync-status');
+    if (!el) return;
+    el.textContent = msg;
+    clearTimeout(el._t);
+    if (msg.startsWith('✅')) el._t = setTimeout(() => { el.textContent = ''; }, 3000);
+}
+
+// ===== ANALYZER =====
+const DEFAULT_DOMAINS = ['0xcheats.net','binware.su','hydrogen.ac','binvnce.su','unicore.cloud','midnight.im','fatality.win','neverlose.cc','skript.gg'];
+const DEFAULT_PROVIDERS = ['gmail.com','mail.ru','yandex.ru','outlook.com','icloud.com','rambler.ru','proton.me'];
+let targetDomains = new Set([...DEFAULT_DOMAINS]);
+let validProviders = new Set([...DEFAULT_PROVIDERS]);
+let myStats = [];
+let suspects = [];
+let fileContent = '';
+
+document.getElementById('fileInput').addEventListener('change', function(e) {
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+        fileContent = ev.target.result;
+        const emails = [...new Set(fileContent.match(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g) || [])]
+            .filter(e => validProviders.has(e.split('@')[1]?.toLowerCase()));
+        const urls = [...new Set(fileContent.match(/https?:\/\/[^\s"'<>|]+/g) || [])]
+            .filter(u => Array.from(targetDomains).some(d => u.toLowerCase().includes(d)));
+        document.getElementById('emailList').innerHTML = emails.map(e => `<tr><td>${e}</td></tr>`).join('');
+        document.getElementById('urlList').innerHTML = urls.map(u => `<tr><td>${u}</td></tr>`).join('');
+        document.getElementById('emailCount').innerText = emails.length;
+        document.getElementById('urlCount').innerText = urls.length;
+    };
+    reader.readAsText(e.target.files[0]);
+});
+
+function addDomain() {
+    const val = prompt("Введите домен (например, cheatsite.com):");
+    if(val) { targetDomains.add(val.toLowerCase()); alert("Добавлено!"); }
+}
+
+// ===== REPORTS =====
+function getSunday(d) {
+    const date = new Date(d);
+    date.setDate(date.getDate() - date.getDay());
+    return date;
+}
+
+function addReport() {
+    const date = document.getElementById('reportDate').value;
+    const hours = parseFloat(document.getElementById('reportHours').value);
+    const count = parseInt(document.getElementById('reportCount').value) || 0;
+    if(!date || isNaN(hours)) return alert("Заполните поля!");
+    myStats.push({ date, hours, count, id: Date.now() });
+    saveAndRender();
+}
+
+function saveAndRender() {
+    saveUserDB();
+    const dayTable = document.getElementById('dayTableBody');
+    const weekTable = document.getElementById('weekTableBody');
+    if (!dayTable) return;
+    dayTable.innerHTML = ''; weekTable.innerHTML = '';
+    let totalH = 0, totalC = 0;
+    const weeks = {};
+    myStats.sort((a,b) => new Date(b.date) - new Date(a.date)).forEach(s => {
+        totalH += s.hours; totalC += s.count;
+        dayTable.innerHTML += `<tr><td>${s.date}</td><td>${s.hours}ч</td><td>${s.count}р</td><td><button onclick="delStat(${s.id})" style="color:var(--danger); border:none; background:none; cursor:pointer">✕</button></td></tr>`;
+        const sun = getSunday(s.date).toISOString().split('T')[0];
+        if(!weeks[sun]) weeks[sun] = { h: 0, c: 0, start: getSunday(s.date) };
+        weeks[sun].h += s.hours; weeks[sun].c += s.count;
+    });
+    Object.keys(weeks).sort().reverse().forEach(key => {
+        const w = weeks[key];
+        const end = new Date(w.start); end.setDate(end.getDate() + 6);
+        weekTable.innerHTML += `<tr class="week-row"><td>${w.start.toLocaleDateString()} - ${end.toLocaleDateString()}</td><td>${w.h.toFixed(1)}ч</td><td>${w.c}шт</td><td>${w.h>0 ? (w.c/w.h).toFixed(1) : 0}</td></tr>`;
+    });
+    document.getElementById('totalHours').innerText = totalH.toFixed(1);
+    document.getElementById('totalReports').innerText = totalC;
+    document.getElementById('avgReports').innerText = totalH > 0 ? (totalC/totalH).toFixed(1) : 0;
+}
+
+function delStat(id) { myStats = myStats.filter(s => s.id !== id); saveAndRender(); }
+
+// ===== SUSPECTS =====
+function addSuspect() {
+    const name = document.getElementById('susName').value;
+    const login = document.getElementById('susLogin').value;
+    const reason = document.getElementById('susReason').value;
+    const evidence = document.getElementById('susEvidence').value;
+    if(!name) return alert("Введите имя!");
+    suspects.push({ id: Date.now(), date: new Date().toLocaleDateString(), name, login, reason, evidence, status: 'none', bReason: '', bTerm: '', bDate: '' });
+    renderSuspects();
+    ['susName','susLogin','susReason','susEvidence'].forEach(id => document.getElementById(id).value = '');
+}
+
+function setSusStatus(id, st) {
+    const s = suspects.find(x => x.id === id);
+    s.status = st;
+    if(st === 'ban') { s.bReason = prompt("Причина бана:"); s.bTerm = prompt("Срок:"); s.bDate = new Date().toLocaleDateString(); }
+    renderSuspects();
+}
+
+function renderSuspects() {
+    saveUserDB();
+    const el = document.getElementById('suspectTableBody');
+    if (!el) return;
+    el.innerHTML = suspects.sort((a,b) => b.id - a.id).map(s => {
+        let st = `<span class="badge status-none">В работе</span>`;
+        if(s.status === 'clear') st = `<span class="badge status-clear">Чист</span>`;
+        if(s.status === 'ban') st = `<span class="badge status-ban">Бан</span><div style="font-size:9px; color:var(--danger); margin-top:3px">${s.bReason} (${s.bTerm})</div>`;
+        return `<tr><td>${s.date}</td><td><b>${s.name}</b></td><td>${s.login}</td><td><small>${s.reason}</small></td><td>${st}</td><td><select onchange="setSusStatus(${s.id}, this.value)"><option value="">Статус</option><option value="clear">Чист</option><option value="ban">Бан</option></select><button onclick="delSus(${s.id})" style="border:none; background:none; color:var(--danger); cursor:pointer">✕</button></td></tr>`;
+    }).join('');
+}
+
+function delSus(id) { suspects = suspects.filter(x => x.id !== id); renderSuspects(); }
+
+// ===== GAME =====
+let gStat = 'idle', gTime, gTimer, best = Infinity;
+function handleGameClick() {
+    const a = document.getElementById('reaction-area');
+    if(gStat === 'idle') {
+        gStat = 'wait'; a.innerText = 'Жди...'; a.className = 'wait';
+        gTimer = setTimeout(() => { gStat = 'ready'; a.innerText = 'КЛИКАЙ!'; a.className = 'ready'; gTime = Date.now(); }, Math.random()*3000 + 2000);
+    } else if(gStat === 'wait') {
+        clearTimeout(gTimer); gStat = 'idle'; a.innerText = 'Фальстарт! Еще раз?'; a.className = '';
+    } else {
+        const res = Date.now() - gTime; gStat = 'idle'; a.innerText = res + ' ms'; a.className = '';
+        document.getElementById('current-result').innerText = 'Результат: ' + res + ' ms';
+        if(res < best) { best = res; document.getElementById('best-score').innerText = 'Лучший: ' + best + ' ms'; }
+    }
+}
+
+// ===== EXPORT / IMPORT =====
+function exportData() {
+    const userJson = sessionStorage.getItem('discord_user');
+    const user = userJson ? JSON.parse(userJson) : null;
+    const username = user ? (user.global_name || user.username) : 'unknown';
+    const date = new Date().toISOString().split('T')[0];
+    const data = { userId: currentUserId, username, exportedAt: date, stats: myStats, suspects: suspects };
+    const blob = new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `backup_${username}_${date}.json`;
+    a.click();
+}
+
+function importData(e) {
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+        const d = JSON.parse(ev.target.result);
+        if(d.stats) myStats = d.stats;
+        if(d.suspects) suspects = d.suspects;
+        saveAndRender(); renderSuspects(); alert("Готово!");
+    };
+    reader.readAsText(e.target.files[0]);
+}
+
+// ===== BOOT =====
+checkAuth();
 </script>
 </body>
 </html>
