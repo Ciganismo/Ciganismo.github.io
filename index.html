@@ -382,47 +382,66 @@ let udb = {
 //  ИНИЦИАЛИЗАЦИЯ
 // =============================================
 async function init() {
+    // Шаг 1: токен из URL — ДО любых async операций
+    if (location.hash.includes('access_token')) {
+        const p = new URLSearchParams(location.hash.slice(1));
+        const token = p.get('access_token');
+        if (token) {
+            localStorage.setItem('ds_token', token);
+            history.replaceState(null, '', location.pathname);
+        }
+    }
+
+    const token = localStorage.getItem('ds_token');
+    if (!token) return screen('login');
+
+    // Показываем загрузку
+    document.getElementById('screen-login').classList.remove('show');
+    document.getElementById('loading-screen').style.display = 'flex';
+
     try {
-        firebase.initializeApp(CFG.firebase);
+        if (!firebase.apps.length) firebase.initializeApp(CFG.firebase);
         db = firebase.firestore();
 
-        // Токен из URL после редиректа Discord
-        if (location.hash.includes('access_token')) {
-            const p = new URLSearchParams(location.hash.slice(1));
-            const token = p.get('access_token');
-            if (token) {
-                localStorage.setItem('ds_token', token);
-                history.replaceState(null, '', location.pathname);
-            }
-        }
-
-        const token = localStorage.getItem('ds_token');
-        if (!token) return screen('login');
-
-        // Получаем профиль Discord
+        // Профиль Discord
         const r = await fetch('https://discord.com/api/v10/users/@me', {
             headers: { Authorization: `Bearer ${token}` }
         });
-        if (!r.ok) { localStorage.removeItem('ds_token'); return screen('login'); }
-
+        if (!r.ok) {
+            localStorage.removeItem('ds_token');
+            document.getElementById('loading-screen').style.display = 'none';
+            return screen('login');
+        }
         me = await r.json();
 
-        // Проверяем белый список в Firestore
+        // Белый список
         const isOwner = me.id === CFG.ownerId;
         if (!isOwner) {
-            const aDoc = await db.collection('config').doc('access').get();
-            const wl   = aDoc.exists ? (aDoc.data().users || []) : [];
+            let wl = [];
+            try {
+                const aDoc = await db.collection('config').doc('access').get();
+                wl = aDoc.exists ? (aDoc.data().users || []) : [];
+            } catch(e) {
+                console.error('Firestore error:', e);
+                document.getElementById('loading-screen').style.display = 'none';
+                document.getElementById('denied-info').textContent = 'Ошибка соединения с Firestore. Проверьте правила доступа.';
+                return screen('denied');
+            }
             if (!wl.includes(me.id)) {
+                document.getElementById('loading-screen').style.display = 'none';
                 document.getElementById('denied-info').textContent = `${me.username}  •  ID: ${me.id}`;
                 return screen('denied');
             }
         }
 
+        document.getElementById('loading-screen').style.display = 'none';
         await boot(isOwner);
 
     } catch(err) {
         console.error('init error:', err);
-        screen('login');
+        document.getElementById('loading-screen').style.display = 'none';
+        document.getElementById('denied-info').textContent = 'Ошибка: ' + err.message;
+        screen('denied');
     }
 }
 
