@@ -5,6 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Panel v4 — GTA5 RP</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono&display=swap" rel="stylesheet">
+    
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+
     <style>
         :root {
             --bg-deep: #050506;
@@ -23,525 +27,453 @@
             --shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
         }
 
-        * { box-sizing: border-box; transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1); }
+        * { box-sizing: border-box; transition: all 0.2s ease; }
         body { 
             font-family: 'Inter', sans-serif; 
             background-color: var(--bg-deep); 
             color: var(--text-main); 
             margin: 0; 
-            line-height: 1.5;
-            background-image: radial-gradient(circle at top right, rgba(255, 140, 0, 0.05), transparent 400px);
             min-height: 100vh;
-            overflow-x: hidden;
+            background-image: radial-gradient(circle at top right, rgba(255, 140, 0, 0.05), transparent 400px);
         }
 
-        /* ===== LOGIN SCREEN ===== */
-        #login-screen {
-            display: none;
-            position: fixed; inset: 0; z-index: 9999;
-            background: var(--bg-deep);
-            align-items: center; justify-content: center; flex-direction: column;
+        /* ===== ЭКРАНЫ ===== */
+        #login-screen, #denied-screen {
+            display: none; position: fixed; inset: 0; z-index: 9999;
+            background: var(--bg-deep); align-items: center; justify-content: center; flex-direction: column;
         }
-        #login-screen.visible { display: flex; }
-        .login-box {
-            background: var(--bg-card);
-            backdrop-filter: blur(20px);
-            border: 1px solid var(--border);
-            border-radius: 24px;
-            padding: 60px;
-            text-align: center;
-            max-width: 440px;
-            width: 90%;
+        .visible { display: flex !important; }
+
+        .login-box, .denied-box {
+            background: var(--bg-card); backdrop-filter: blur(20px);
+            border: 1px solid var(--border); border-radius: 24px;
+            padding: 50px; text-align: center; max-width: 440px; width: 90%;
             box-shadow: var(--shadow);
         }
-        .login-logo-img {
-            width: 100%;
-            max-width: 280px;
-            height: auto;
-            margin-bottom: 30px;
-            filter: drop-shadow(0 0 15px rgba(255, 140, 0, 0.2));
-        }
-        .login-sub { font-size: 14px; color: var(--text-main); margin-bottom: 35px; opacity: 0.8; }
+
+        .login-logo-img { width: 100%; max-width: 240px; margin-bottom: 20px; }
+        
         .btn-discord {
             display: flex; align-items: center; justify-content: center; gap: 12px;
-            width: 100%; padding: 16px 20px;
-            background: var(--discord); color: #fff;
-            border: none; border-radius: 12px;
-            font-size: 15px; font-weight: 700;
-            cursor: pointer; text-decoration: none;
-            box-shadow: 0 4px 15px rgba(88, 101, 242, 0.3);
+            width: 100%; padding: 16px; background: var(--discord); color: #fff;
+            border: none; border-radius: 12px; font-weight: 700; cursor: pointer; text-decoration: none;
         }
         .btn-discord:hover { background: var(--discord-hover); transform: translateY(-2px); }
-        .btn-discord svg { width: 22px; height: 22px; }
-        .login-notice { margin-top: 20px; font-size: 11px; color: #52525b; }
 
-        /* ===== DENIED SCREEN ===== */
-        #denied-screen {
-            display: none;
-            position: fixed; inset: 0; z-index: 9999;
-            background: var(--bg-deep);
-            align-items: center; justify-content: center; flex-direction: column;
-        }
-        #denied-screen.visible { display: flex; }
-        .denied-box {
-            background: var(--bg-card);
-            border: 1px solid rgba(239,68,68,0.2);
-            border-radius: 24px;
-            padding: 50px 60px;
-            max-width: 420px;
-            width: 90%;
-            text-align: center;
-            box-shadow: var(--shadow);
-        }
-        .denied-icon { font-size: 50px; margin-bottom: 16px; }
-        .denied-title { font-size: 20px; font-weight: 700; color: var(--danger); margin-bottom: 8px; }
-
-        /* ===== HEADER ===== */
+        /* ===== ОСНОВНОЙ ИНТЕРФЕЙС ===== */
         .admin-header {
-            background-color: rgba(10, 10, 11, 0.7);
-            backdrop-filter: blur(15px);
             height: 80px; display: flex; align-items: center; padding: 0 40px;
-            border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 100; justify-content: space-between;
-        }
-        .logo-area img { height: 45px; width: auto; }
-
-        .header-user { display: flex; align-items: center; gap: 15px; }
-        .header-avatar { width: 40px; height: 40px; border-radius: 50%; border: 2px solid var(--accent); object-fit: cover; }
-        .header-avatar-placeholder {
-            width: 40px; height: 40px; border-radius: 50%;
-            background: var(--discord); color: #fff;
-            display: flex; align-items: center; justify-content: center;
-            border: 2px solid var(--accent);
+            background: rgba(10, 10, 11, 0.8); backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 100;
+            justify-content: space-between;
         }
 
-        /* ===== LAYOUT & CARDS ===== */
-        .wrapper { max-width: 1600px; margin: 40px auto; padding: 0 40px; display: grid; grid-template-columns: 320px 1fr; gap: 35px; }
+        .wrapper { max-width: 1600px; margin: 40px auto; padding: 0 40px; display: grid; grid-template-columns: 300px 1fr; gap: 30px; }
 
-        .card { 
-            background-color: var(--bg-card); 
-            border: 1px solid var(--border); 
-            border-radius: var(--radius); 
-            padding: 28px; 
-            margin-bottom: 25px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
-        }
-        .card:hover { border-color: rgba(255, 140, 0, 0.3); }
-        .card h3 { font-size: 11px; text-transform: uppercase; letter-spacing: 1.5px; color: var(--text-bright); margin-top: 0; margin-bottom: 25px; opacity: 0.6; }
-
+        .card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 25px; margin-bottom: 20px; }
+        
         .tab-btn {
-            padding: 15px 20px; border-radius: 12px; cursor: pointer; border: 1px solid transparent;
-            background: transparent; color: var(--text-main); text-align: left; font-weight: 600; font-size: 14px;
-            margin-bottom: 5px; width: 100%;
+            width: 100%; padding: 14px; margin-bottom: 5px; text-align: left;
+            background: transparent; border: 1px solid transparent; color: var(--text-main);
+            border-radius: 10px; cursor: pointer; font-weight: 600;
         }
-        .tab-btn.active { background: rgba(255, 140, 0, 0.1); border-color: rgba(255, 140, 0, 0.2); color: var(--accent); }
-        .tab-btn:hover:not(.active) { background: rgba(255, 255, 255, 0.03); color: var(--text-bright); }
+        .tab-btn.active { background: rgba(255, 140, 0, 0.1); color: var(--accent); border-color: rgba(255, 140, 0, 0.2); }
 
         input, select, textarea {
             width: 100%; background: var(--bg-input); border: 1px solid var(--border);
-            padding: 14px; color: #fff; border-radius: 10px; margin-bottom: 15px; outline: none; font-size: 13px;
+            padding: 12px; color: #fff; border-radius: 8px; margin-bottom: 10px; outline: none;
         }
-        input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(255, 140, 0, 0.1); }
 
-        .btn-orange { background: var(--accent-gradient); color: #000; width: 100%; border: none; padding: 14px; border-radius: 10px; font-weight: 800; cursor: pointer; }
-        .btn-orange:hover { transform: translateY(-2px); filter: brightness(1.1); box-shadow: 0 5px 15px rgba(255, 140, 0, 0.3); }
+        .btn-orange { 
+            background: var(--accent-gradient); color: #000; width: 100%; border: none; 
+            padding: 12px; border-radius: 8px; font-weight: 800; cursor: pointer; 
+        }
 
-        /* Таблицы */
         .data-table { width: 100%; border-collapse: collapse; }
-        .data-table th { color: var(--accent); text-transform: uppercase; font-size: 10px; letter-spacing: 1px; padding: 15px; text-align: left; }
-        .data-table td { border-bottom: 1px solid var(--border); padding: 15px; font-size: 13px; color: var(--text-bright); }
+        .data-table th { color: var(--accent); font-size: 11px; text-align: left; padding: 12px; border-bottom: 1px solid var(--border); }
+        .data-table td { padding: 12px; border-bottom: 1px solid var(--border); font-size: 13px; }
 
-        /* Game Area */
+        .content-section { display: none; }
+        .content-section.active { display: block; animation: fadeIn 0.3s ease; }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
         #reaction-area {
-            height: 350px; border-radius: 20px;
-            background: rgba(255,255,255,0.02);
-            border: 2px dashed var(--border);
-            font-weight: 700;
-            display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 24px;
+            height: 300px; border: 2px dashed var(--border); border-radius: 20px;
+            display: flex; align-items: center; justify-content: center; font-size: 24px; cursor: pointer;
         }
-        #reaction-area.ready { background: var(--success); color: #000; border-style: solid; box-shadow: 0 0 40px rgba(16, 185, 129, 0.3); }
         #reaction-area.wait { background: var(--danger); color: #fff; }
-
-        .content-section { display: none; animation: slideUp 0.4s ease-out; }
-        .content-section.active { display: block; }
-        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-
-        .access-item { display: flex; justify-content: space-between; align-items: center; padding: 12px; border-bottom: 1px solid var(--border); }
-        .btn-logout-sm { background: none; border: 1px solid var(--border); color: var(--text-main); padding: 10px 20px; border-radius: 8px; cursor: pointer; margin-top: 10px; }
-        .btn-logout-sm:hover { background: rgba(255,255,255,0.05); color: #fff; }
+        #reaction-area.ready { background: var(--success); color: #000; box-shadow: 0 0 30px rgba(16, 185, 129, 0.2); }
     </style>
 </head>
 <body>
 
 <div id="login-screen">
     <div class="login-box">
-        <img src="Черемша.png" class="login-logo-img" alt="Logo">
-        <div class="login-sub">GTA5 RP · Панель управления администратора</div>
-        <a id="discord-login-btn" class="btn-discord" href="#" onclick="startDiscordLogin()">
-            <svg viewBox="0 0 71 55" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M60.1045 4.8978C55.5792 2.8214 50.7265 1.2916 45.6527 0.41542C45.5603 0.39851 45.468 0.44077 45.4204 0.52529C44.7963 1.6353 44.105 3.0834 43.6209 4.2216C38.1637 3.4046 32.7345 3.4046 27.3892 4.2216C26.905 3.0581 26.1886 1.6353 25.5617 0.52529C25.5141 0.44359 25.4218 0.40133 25.3294 0.41542C20.2584 1.2888 15.4057 2.8186 10.8776 4.8978C10.8384 4.9147 10.8048 4.9429 10.7825 4.9795C1.57795 18.7309 -0.943561 32.1443 0.293408 45.3914C0.299005 45.4562 0.335386 45.5182 0.385761 45.5576C6.45866 50.0174 12.3413 52.7249 18.1147 54.5195C18.2071 54.5477 18.305 54.5139 18.3638 54.4378C19.7295 52.5728 20.9469 50.6063 21.9907 48.5383C22.0523 48.4172 21.9935 48.2735 21.8676 48.2256C19.9366 47.4931 18.0979 46.6 16.3292 45.5858C16.1893 45.5041 16.1781 45.304 16.3068 45.2082C16.679 44.9293 17.0513 44.6391 17.4067 44.3461C17.471 44.2926 17.5606 44.2813 17.6362 44.3151C29.2558 49.6202 41.8354 49.6202 53.3179 44.3151C53.3935 44.2785 53.4831 44.2898 53.5502 44.3433C53.9057 44.6363 54.2779 44.9293 54.6529 45.2082C54.7816 45.304 54.7732 45.5041 54.6333 45.5858C52.8646 46.6197 51.0259 47.4931 49.0921 48.2228C48.9662 48.2707 48.9102 48.4172 48.9718 48.5383C50.038 50.6034 51.2554 52.5699 52.5959 54.435C52.6519 54.5139 52.7526 54.5477 52.845 54.5195C58.6464 52.7249 64.529 50.0174 70.6019 45.5576C70.6551 45.5182 70.6887 45.459 70.6943 45.3942C72.1747 30.0791 68.2147 16.7757 60.1968 4.9823C60.1772 4.9429 60.1437 4.9147 60.1045 4.8978ZM23.7259 37.3253C20.2276 37.3253 17.3451 34.1136 17.3451 30.1693C17.3451 26.225 20.1717 23.0133 23.7259 23.0133C27.308 23.0133 30.1626 26.2532 30.1066 30.1693C30.1066 34.1136 27.28 37.3253 23.7259 37.3253ZM47.3178 37.3253C43.8196 37.3253 40.9371 34.1136 40.9371 30.1693C40.9371 26.225 43.7636 23.0133 47.3178 23.0133C50.9 23.0133 53.7545 26.2532 53.6986 30.1693C53.6986 34.1136 50.9 37.3253 47.3178 37.3253Z" fill="currentColor"/>
-            </svg>
-            Войти через Discord
-        </a>
-        <div class="login-notice">Доступ только для персонала</div>
+        <img src="Черемша.png" class="login-logo-img" onerror="this.src='https://via.placeholder.com/200x80?text=LOGO'">
+        <div style="margin-bottom: 30px; opacity: 0.7;">GTA5 RP • Admin Panel v4</div>
+        <button class="btn-discord" onclick="startDiscordLogin()">Войти через Discord</button>
     </div>
 </div>
 
 <div id="denied-screen">
     <div class="denied-box">
-        <div class="denied-icon">🚫</div>
-        <div class="denied-title">Доступ ограничен</div>
-        <div class="denied-sub">Вас нет в белом списке. Обратитесь к куратору.</div>
-        <div id="denied-user-info" style="margin: 15px 0; font-family: 'JetBrains Mono'; opacity: 0.5;"></div>
-        <button class="btn-logout-sm" onclick="logout()">Выйти</button>
+        <div style="font-size: 50px; margin-bottom: 20px;">🔒</div>
+        <h2 style="color: var(--danger);">Доступ ограничен</h2>
+        <p id="denied-user-info" style="font-family: monospace; opacity: 0.6;"></p>
+        <button class="btn-orange" onclick="logout()" style="background: var(--bg-input); color: #fff;">Выйти</button>
     </div>
 </div>
 
 <div id="app" style="display:none">
-
-<header class="admin-header">
-    <div class="logo-area">
-        <img src="Черемша.png" alt="Logo">
-    </div>
-    <div class="header-user">
-        <div style="text-align: right;">
-            <div id="header-username" style="font-weight: 700; color: var(--text-bright);"></div>
-            <div id="header-discordtag" style="color: var(--accent); font-size: 11px; font-family: 'JetBrains Mono';"></div>
-        </div>
-        <div id="header-avatar-wrap"></div>
-        <button class="btn-logout-sm" onclick="logout()" style="margin-top:0">Выход</button>
-    </div>
-</header>
-
-<div class="wrapper">
-    <aside>
-        <nav class="tab-menu">
-            <button class="tab-btn active" onclick="switchTab('analyzer')">🔍 Анализатор логов</button>
-            <button class="tab-btn" onclick="switchTab('reports')">📊 Моя статистика</button>
-            <button class="tab-btn" onclick="switchTab('suspects')">⚖️ База проверок</button>
-            <button class="tab-btn" onclick="switchTab('game')">⚡ Тест реакции</button>
-            <button class="tab-btn owner-only" id="access-tab-btn" onclick="switchTab('access')" style="display:none">🔐 Доступы</button>
-        </nav>
-
-        <div id="side-analyzer" class="card side-panel">
-            <h3>Фильтр сайтов</h3>
-            <input type="text" id="domainInput" placeholder="Добавить домен...">
-            <button class="btn-orange" onclick="addDomain()">Добавить</button>
-        </div>
-
-        <div id="side-reports" class="card side-panel" style="display:none">
-            <h3>Новый отчет</h3>
-            <input type="date" id="reportDate">
-            <input type="number" id="reportHours" step="0.1" placeholder="Часы за сегодня">
-            <input type="number" id="reportCount" placeholder="Кол-во репортов">
-            <button class="btn-orange" onclick="addReport()">Сохранить</button>
-        </div>
-
-        <div class="card">
-            <button class="btn-orange" style="background:rgba(255,255,255,0.05); color:#fff; border:1px solid var(--border); margin-bottom:10px" onclick="exportData()">💾 Бэкап (JSON)</button>
-            <button class="btn-orange" style="background:rgba(255,255,255,0.05); color:#fff; border:1px solid var(--border);" onclick="document.getElementById('importFile').click()">📂 Импорт</button>
-            <input type="file" id="importFile" style="display:none" onchange="importData(event)">
-        </div>
-
-        <div style="text-align: center; opacity: 0.3; padding: 20px;">
-             <img src="Черемша.jpg" style="width: 50px; border-radius: 8px; filter: grayscale(1);">
-        </div>
-    </aside>
-
-    <main>
-        <section id="section-analyzer" class="content-section active">
-            <div class="card" style="border: 2px dashed var(--border); text-align:center; padding:50px; cursor:pointer;" onclick="document.getElementById('fileInput').click()">
-                <div style="font-size: 30px; margin-bottom: 10px;">📄</div>
-                <b>Кликните, чтобы загрузить лог (.txt)</b>
-                <input type="file" id="fileInput" accept=".txt" style="display: none;">
+    <header class="admin-header">
+        <img src="Черемша.png" height="40" onerror="this.style.display='none'">
+        <div style="display: flex; align-items: center; gap: 20px;">
+            <div style="text-align: right;">
+                <div id="header-name" style="font-weight: 700; color: #fff;">User</div>
+                <div id="header-id" style="font-size: 10px; color: var(--accent);">ID: 0000</div>
             </div>
-            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:25px;">
-                <div class="card" style="padding:0">
-                    <div style="padding:20px; border-bottom:1px solid var(--border); display:flex; justify-content:space-between;">
-                        <span>ЗАПРЕЩЕННЫЕ САЙТЫ</span>
-                        <span id="urlCount" style="color:var(--accent); font-weight:800">0</span>
+            <div id="avatar-container"></div>
+            <button onclick="logout()" style="padding: 8px 15px; background: none; border: 1px solid var(--border); color: #fff; cursor: pointer; border-radius: 6px;">Выход</button>
+        </div>
+    </header>
+
+    <div class="wrapper">
+        <aside>
+            <div class="card" style="padding: 10px;">
+                <button class="tab-btn active" onclick="switchTab('analyzer')">🔍 Анализатор</button>
+                <button class="tab-btn" onclick="switchTab('stats')">📊 Статистика</button>
+                <button class="tab-btn" onclick="switchTab('db')">⚖️ База проверок</button>
+                <button class="tab-btn" onclick="switchTab('game')">⚡ Реакция</button>
+                <button class="tab-btn owner-only" id="btn-admin" style="display:none; color: var(--success);" onclick="switchTab('admin')">🔐 Админ-панель</button>
+            </div>
+        </aside>
+
+        <main>
+            <section id="sect-analyzer" class="content-section active">
+                <div class="card" onclick="document.getElementById('logFile').click()" style="text-align: center; border-style: dashed; cursor: pointer;">
+                    <input type="file" id="logFile" hidden onchange="processLog(this)">
+                    <div style="font-size: 40px;">📄</div>
+                    <b>Нажмите для загрузки .txt лога</b>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                    <div class="card">
+                        <h3>Сайты (<span id="count-urls">0</span>)</h3>
+                        <div id="list-urls" style="max-height: 300px; overflow: auto; font-size: 12px;"></div>
                     </div>
-                    <div style="max-height:450px; overflow-y:auto;"><table class="data-table"><tbody id="urlList"></tbody></table></div>
-                </div>
-                <div class="card" style="padding:0">
-                    <div style="padding:20px; border-bottom:1px solid var(--border); display:flex; justify-content:space-between;">
-                        <span>НАЙДЕННЫЕ ПОЧТЫ</span>
-                        <span id="emailCount" style="color:var(--accent); font-weight:800">0</span>
+                    <div class="card">
+                        <h3>Почты (<span id="count-mails">0</span>)</h3>
+                        <div id="list-mails" style="max-height: 300px; overflow: auto; font-size: 12px;"></div>
                     </div>
-                    <div style="max-height:450px; overflow-y:auto;"><table class="data-table"><tbody id="emailList"></tbody></table></div>
                 </div>
-            </div>
-        </section>
+            </section>
 
-        <section id="section-reports" class="content-section">
-            <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:25px; margin-bottom:25px;">
-                <div class="card" style="text-align:center"><b>ОТРАБОТАНО</b><div id="totalHours" style="font-size:32px; color:var(--accent); font-weight:800">0</div><small>часов всего</small></div>
-                <div class="card" style="text-align:center"><b>РЕПОРТЫ</b><div id="totalReports" style="font-size:32px; color:var(--accent); font-weight:800">0</div><small>выполнено</small></div>
-                <div class="card" style="text-align:center"><b>ЭФФЕКТИВНОСТЬ</b><div id="avgReports" style="font-size:32px; color:var(--accent); font-weight:800">0</div><small>реп/час</small></div>
-            </div>
-            <div class="card" style="padding:0">
-                <div style="padding:20px; border-bottom:1px solid var(--border);"><b>НЕДЕЛЬНЫЕ ИТОГИ</b></div>
-                <table class="data-table">
-                    <thead><tr><th>Период</th><th>Часы</th><th>Репорты</th><th>Р/Ч</th></tr></thead>
-                    <tbody id="weekTableBody"></tbody>
-                </table>
-            </div>
-        </section>
-
-        <section id="section-suspects" class="content-section">
-            <div class="card" style="padding:0">
-                <div style="padding:20px; border-bottom:1px solid var(--border);"><b>СПИСОК ПОДОЗРЕВАЕМЫХ</b></div>
-                <table class="data-table">
-                    <thead><tr><th>Дата</th><th>Игрок</th><th>Данные</th><th>Суть</th><th>Вердикт</th><th>Упр.</th></tr></thead>
-                    <tbody id="suspectTableBody"></tbody>
-                </table>
-            </div>
-        </section>
-
-        <section id="section-game" class="content-section">
-            <div class="card" style="text-align:center">
-                <h3>Тренажер реакции</h3>
-                <div id="reaction-area" onclick="handleGameClick()">Нажми, чтобы начать</div>
-                <div style="margin-top:25px; font-size:18px;">
-                    <span id="current-result">Тек: --</span> | 
-                    <span id="best-score" style="color:var(--accent); font-weight:800">Рекорд: --</span>
+            <section id="sect-stats" class="content-section">
+                <div class="card">
+                    <h3>Добавить отчет</h3>
+                    <div style="display: flex; gap: 10px;">
+                        <input type="date" id="st-date">
+                        <input type="number" id="st-hours" placeholder="Часы">
+                        <input type="number" id="st-count" placeholder="Репорты">
+                        <button class="btn-orange" onclick="saveStat()">OK</button>
+                    </div>
                 </div>
-            </div>
-        </section>
+                <div class="card">
+                    <table class="data-table">
+                        <thead><tr><th>Дата</th><th>Часы</th><th>Репорты</th><th>Р/Ч</th></tr></thead>
+                        <tbody id="table-stats"></tbody>
+                    </table>
+                </div>
+            </section>
 
-        <section id="section-access" class="content-section">
-            <div class="card">
-                <h3>🔐 Управление доступом</h3>
-                <div id="access-list"></div>
-            </div>
-        </section>
-    </main>
-</div>
+            <section id="sect-db" class="content-section">
+                <div class="card">
+                    <table class="data-table">
+                        <thead><tr><th>Игрок</th><th>Суть</th><th>Вердикт</th><th></th></tr></thead>
+                        <tbody id="table-suspects"></tbody>
+                        <tfoot>
+                            <tr>
+                                <td><input id="in-name" placeholder="Ник/ID"></td>
+                                <td><input id="in-reason" placeholder="Причина"></td>
+                                <td><select id="in-verd"><option>BAN</option><option>CLEAR</option></select></td>
+                                <td><button onclick="addSuspect()">➕</button></td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </section>
 
+            <section id="sect-game" class="content-section">
+                <div class="card" style="text-align: center;">
+                    <div id="reaction-area" onclick="gameClick()">Кликни для старта</div>
+                    <h2 id="game-res">-- ms</h2>
+                </div>
+            </section>
+
+            <section id="sect-admin" class="content-section">
+                <div class="card">
+                    <h3>WhiteList (Discord IDs)</h3>
+                    <div id="admin-list"></div>
+                    <hr style="border: 0; border-top: 1px solid var(--border); margin: 20px 0;">
+                    <input id="new-white-id" placeholder="ID пользователя">
+                    <button class="btn-orange" onclick="addToWhitelist()">Добавить</button>
+                </div>
+            </section>
+        </main>
+    </div>
 </div>
 
 <script>
-// ============================================================
-// КОНФИГУРАЦИЯ (Firebase и Discord)
-// ============================================================
-const DISCORD_CLIENT_ID = '1490783084243587163';
-const REDIRECT_URI = window.location.href.split('?')[0].split('#')[0];
-const OWNER_DISCORD_ID = '536419109856870431'; 
-
-let db, currentUserId = null, isOwner = false;
-let myStats = [], suspects = [], domains = ['soft', 'cheat', 'hack', 'executor', '0x', 'midnight', 'rampage', 'extreme', 'arena', 'unknown', 'razer', 'trigger', 'esp', 'aim', 'wallhack', 'wh', 'extrim'];
-
-// Инициализация БД
-async function initFirestore() {
-    const { initializeApp } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js');
-    const { getFirestore, doc, getDoc, setDoc } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js');
-    const firebaseConfig = {
+// ==========================
+// КОНФИГУРАЦИЯ
+// ==========================
+const CONFIG = {
+    clientId: '1490783084243587163',
+    ownerId: '536419109856870431',
+    redirectUri: window.location.origin + window.location.pathname,
+    firebase: {
         apiKey: "AIzaSyB6f9Kd2Rk6ccKEy661QTH9QQfuGEZnqqo",
         authDomain: "admin-panel-cheremsha.firebaseapp.com",
         projectId: "admin-panel-cheremsha",
         storageBucket: "admin-panel-cheremsha.firebasestorage.app",
         messagingSenderId: "722654535625",
-        appId: "1:722654535625:web:4aa421decae3a29f69d218",
-        measurementId: "G-4MWLRBDX02"
-    };
-    const app = initializeApp(firebaseConfig);
-    db = getFirestore(app);
-    window._fsDoc = doc; window._fsGetDoc = getDoc; window._fsSetDoc = setDoc;
+        appId: "1:722654535625:web:4aa421decae3a29f69d218"
+    }
+};
+
+let db, currentUser, userDB = { stats: [], suspects: [], domains: ['cheat', 'soft', '0x', 'midnight', 'extreme'] };
+
+// ==========================
+// ЯДРО АВТОРИЗАЦИИ
+// ==========================
+async function init() {
+    try {
+        // 1. Инициализация Firebase
+        firebase.initializeApp(CONFIG.firebase);
+        db = firebase.firestore();
+
+        // 2. Проверка токена в URL
+        const hash = window.location.hash;
+        if (hash.includes('access_token')) {
+            const params = new URLSearchParams(hash.substring(1));
+            const token = params.get('access_token');
+            localStorage.setItem('ds_token', token);
+            // Чистим URL без перезагрузки
+            window.history.replaceState(null, null, window.location.pathname);
+        }
+
+        const token = localStorage.getItem('ds_token');
+        if (!token) return showScreen('login-screen');
+
+        // 3. Получение профиля Discord
+        const resp = await fetch('https://discord.com/api/users/@me', {
+            headers: { Authorization: `Bearer ${token}` }
+        });
+
+        if (!resp.ok) {
+            localStorage.removeItem('ds_token');
+            return showScreen('login-screen');
+        }
+
+        currentUser = await resp.json();
+        
+        // 4. Проверка доступа
+        const accessDoc = await db.collection('config').doc('access').get();
+        const whitelist = accessDoc.exists ? accessDoc.data().users || [] : [];
+        const isOwner = currentUser.id === CONFIG.ownerId;
+
+        if (!isOwner && !whitelist.includes(currentUser.id)) {
+            document.getElementById('denied-user-info').innerText = `${currentUser.username} (${currentUser.id})`;
+            return showScreen('denied-screen');
+        }
+
+        // 5. Запуск приложения
+        startApp(isOwner);
+
+    } catch (err) {
+        console.error("Критическая ошибка:", err);
+        showScreen('login-screen');
+    }
 }
 
-// Авторизация
 function startDiscordLogin() {
-    const url = `https://discord.com/api/oauth2/authorize?client_id=${DISCORD_CLIENT_ID}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&response_type=token&scope=identify`;
+    const url = `https://discord.com/api/oauth2/authorize?client_id=${CONFIG.clientId}&redirect_uri=${encodeURIComponent(CONFIG.redirectUri)}&response_type=token&scope=identify`;
     window.location.href = url;
 }
 
-async function checkAuth() {
-    const fragment = new URLSearchParams(window.location.hash.slice(1));
-    let token = fragment.get('access_token') || localStorage.getItem('dc_token');
-    if (!token) return showLogin();
+function logout() {
+    localStorage.removeItem('ds_token');
+    window.location.href = CONFIG.redirectUri;
+}
+
+// ==========================
+// ЛОГИКА ПРИЛОЖЕНИЯ
+// ==========================
+async function startApp(isOwner) {
+    showScreen('app');
+    document.getElementById('header-name').innerText = currentUser.global_name || currentUser.username;
+    document.getElementById('header-id').innerText = `@${currentUser.username}`;
     
-    try {
-        const resp = await fetch('https://discord.com/api/users/@me', { headers: { Authorization: `Bearer ${token}` } });
-        if (!resp.ok) throw new Error();
-        const user = await resp.json();
-        localStorage.setItem('dc_token', token);
-        currentUserId = user.id;
-        isOwner = (user.id === OWNER_DISCORD_ID);
-        
-        await initFirestore();
-        const accessDoc = await window._fsGetDoc(window._fsDoc(db, "config", "access"));
-        const whitelist = accessDoc.exists() ? accessDoc.data().users || [] : [];
-        
-        if (!isOwner && !whitelist.includes(user.id)) return showDenied(user);
-        
-        showApp(user);
-    } catch(e) { showLogin(); }
-}
-
-function showLogin() { document.getElementById('login-screen').classList.add('visible'); }
-function showDenied(user) {
-    document.getElementById('denied-screen').classList.add('visible');
-    document.getElementById('denied-user-info').innerText = `${user.username} (${user.id})`;
-}
-function logout() { localStorage.removeItem('dc_token'); window.location.href = REDIRECT_URI; }
-
-function showApp(user) {
-    document.getElementById('login-screen').classList.remove('visible');
-    document.getElementById('app').style.display = 'block';
-    document.getElementById('header-username').innerText = user.global_name || user.username;
-    document.getElementById('header-discordtag').innerText = `@${user.username}`;
-    const avatarUrl = user.avatar ? `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png` : null;
-    document.getElementById('header-avatar-wrap').innerHTML = avatarUrl ? `<img src="${avatarUrl}" class="header-avatar">` : `<div class="header-avatar-placeholder">${user.username[0].toUpperCase()}</div>`;
-    if(isOwner) { document.getElementById('access-tab-btn').style.display = 'block'; loadAccessList(); }
-    loadUserDB();
-}
-
-// БД Логика
-async function loadUserDB() {
-    const docSnap = await window._fsGetDoc(window._fsDoc(db, "users", currentUserId));
-    if(docSnap.exists()){
-        const data = docSnap.data();
-        myStats = data.stats || []; suspects = data.suspects || []; domains = data.domains || domains;
+    if (currentUser.avatar) {
+        document.getElementById('avatar-container').innerHTML = `<img src="https://cdn.discordapp.com/avatars/${currentUser.id}/${currentUser.avatar}.png" style="width:40px; border-radius:50%; border:2px solid var(--accent)">`;
     }
-    renderStats(); renderSuspects();
+
+    if (isOwner) {
+        document.getElementById('btn-admin').style.display = 'block';
+        loadAdminList();
+    }
+
+    // Загрузка данных пользователя
+    const userDoc = await db.collection('users').doc(currentUser.id).get();
+    if (userDoc.exists) {
+        userDB = { ...userDB, ...userDoc.data() };
+    }
+    renderAll();
 }
 
-async function saveUserDB() {
-    await window._fsSetDoc(window._fsDoc(db, "users", currentUserId), { stats: myStats, suspects: suspects, domains: domains }, { merge: true });
+function showScreen(id) {
+    document.getElementById('login-screen').classList.remove('visible');
+    document.getElementById('denied-screen').classList.remove('visible');
+    document.getElementById('app').style.display = 'none';
+    
+    if (id === 'app') {
+        document.getElementById('app').style.display = 'block';
+    } else {
+        document.getElementById(id).classList.add('visible');
+    }
 }
 
-// Вкладки
-function switchTab(id) {
+function switchTab(tab) {
     document.querySelectorAll('.content-section').forEach(s => s.classList.remove('active'));
     document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-    document.querySelectorAll('.side-panel').forEach(p => p.style.display = 'none');
-    document.getElementById('section-' + id).classList.add('active');
+    
+    const target = { 'analyzer': 'sect-analyzer', 'stats': 'sect-stats', 'db': 'sect-db', 'game': 'sect-game', 'admin': 'sect-admin' }[tab];
+    document.getElementById(target).classList.add('active');
     event.currentTarget.classList.add('active');
-    if(document.getElementById('side-' + id)) document.getElementById('side-' + id).style.display = 'block';
 }
 
 // Анализатор
-document.getElementById('fileInput').addEventListener('change', function(e) {
-    const file = e.target.files[0]; if(!file) return;
+function processLog(input) {
+    const file = input.files[0];
     const reader = new FileReader();
-    reader.onload = (ev) => {
-        const text = ev.target.result;
-        const urls = [], emails = [];
+    reader.onload = (e) => {
+        const text = e.target.result;
+        const urls = [], mails = [];
         const lines = text.split('\n');
+        
         lines.forEach(line => {
-            const mUrls = line.match(/https?:\/\/[^\s/$.?#].[^\s]*/gi);
-            if(mUrls) mUrls.forEach(u => { if(domains.some(d => u.toLowerCase().includes(d))) urls.push(u); });
-            const mEmails = line.match(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g);
-            if(mEmails) emails.push(...mEmails);
+            const mUrls = line.match(/https?:\/\/[^\s]+/gi);
+            if(mUrls) mUrls.forEach(u => {
+                if(userDB.domains.some(d => u.toLowerCase().includes(d))) urls.push(u);
+            });
+            const mMails = line.match(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g);
+            if(mMails) mails.push(...mMails);
         });
-        renderAnalyzer(urls, emails);
+
+        document.getElementById('count-urls').innerText = urls.length;
+        document.getElementById('count-mails').innerText = [...new Set(mails)].length;
+        document.getElementById('list-urls').innerHTML = urls.map(u => `<div style="margin-bottom:5px; color:var(--danger)">${u}</div>`).join('');
+        document.getElementById('list-mails').innerHTML = [...new Set(mails)].map(m => `<div>${m}</div>`).join('');
     };
     reader.readAsText(file);
-});
-
-function renderAnalyzer(urls, emails) {
-    document.getElementById('urlCount').innerText = urls.length;
-    document.getElementById('emailCount').innerText = [...new Set(emails)].length;
-    document.getElementById('urlList').innerHTML = urls.map(u => `<tr><td>${u}</td></tr>`).join('');
-    document.getElementById('emailList').innerHTML = [...new Set(emails)].map(e => `<tr><td>${e}</td></tr>`).join('');
-}
-
-function addDomain() {
-    const input = document.getElementById('domainInput');
-    if(input.value) { domains.push(input.value.toLowerCase()); input.value = ''; saveUserDB(); alert('Добавлено!'); }
 }
 
 // Статистика
-function addReport() {
-    const d = document.getElementById('reportDate').value;
-    const h = parseFloat(document.getElementById('reportHours').value);
-    const c = parseInt(document.getElementById('reportCount').value);
-    if(!d || isNaN(h) || isNaN(c)) return;
-    myStats.push({ date: d, hours: h, reports: c });
-    saveUserDB(); renderStats();
+async function saveStat() {
+    const d = document.getElementById('st-date').value;
+    const h = parseFloat(document.getElementById('st-hours').value);
+    const c = parseInt(document.getElementById('st-count').value);
+    if(!d || isNaN(h)) return;
+
+    userDB.stats.push({ date: d, hours: h, count: c });
+    await db.collection('users').doc(currentUser.id).set(userDB);
+    renderAll();
 }
 
-function renderStats() {
-    let th = 0, tr = 0;
-    myStats.forEach(s => { th += s.hours; tr += s.reports; });
-    document.getElementById('totalHours').innerText = th.toFixed(1);
-    document.getElementById('totalReports').innerText = tr;
-    document.getElementById('avgReports').innerText = th > 0 ? (tr/th).toFixed(1) : 0;
-    
-    document.getElementById('weekTableBody').innerHTML = myStats.slice(-10).reverse().map(s => `<tr><td>${s.date}</td><td>${s.hours}ч</td><td>${s.reports}</td><td>${(s.reports/s.hours).toFixed(1)}</td></tr>`).join('');
+// База проверок
+async function addSuspect() {
+    const name = document.getElementById('in-name').value;
+    if(!name) return;
+    userDB.suspects.push({
+        name,
+        reason: document.getElementById('in-reason').value,
+        verd: document.getElementById('in-verd').value
+    });
+    await db.collection('users').doc(currentUser.id).set(userDB);
+    renderAll();
 }
 
-// Подозреваемые
-function renderSuspects() {
-    const html = suspects.map((s, i) => `<tr><td>${s.date}</td><td>${s.name}</td><td>${s.data}</td><td>${s.reason}</td><td>${s.verdict}</td><td><button onclick="delSuspect(${i})">❌</button></td></tr>`).join('');
-    document.getElementById('suspectTableBody').innerHTML = html + `<tr><td><input id="siD" type="date"></td><td><input id="siN" placeholder="Ник/ID"></td><td><input id="siDt" placeholder="Почта/Discord"></td><td><input id="siR" placeholder="Суть"></td><td><select id="siV"><option>BAN</option><option>CLEAR</option></select></td><td><button onclick="addSuspect()">➕</button></td></tr>`;
+async function delSuspect(idx) {
+    userDB.suspects.splice(idx, 1);
+    await db.collection('users').doc(currentUser.id).set(userDB);
+    renderAll();
 }
 
-function addSuspect() {
-    const n = document.getElementById('siN').value; if(!n) return;
-    suspects.push({ date: document.getElementById('siD').value, name: n, data: document.getElementById('siDt').value, reason: document.getElementById('siR').value, verdict: document.getElementById('siV').value });
-    saveUserDB(); renderSuspects();
-}
-function delSuspect(i) { suspects.splice(i, 1); saveUserDB(); renderSuspects(); }
+function renderAll() {
+    // Таблица статы
+    document.getElementById('table-stats').innerHTML = userDB.stats.slice(-10).reverse().map(s => `
+        <tr><td>${s.date}</td><td>${s.hours}</td><td>${s.count}</td><td>${(s.count/s.hours).toFixed(1)}</td></tr>
+    `).join('');
 
-// Доступы (Owner)
-async function loadAccessList() {
-    const docSnap = await window._fsGetDoc(window._fsDoc(db, "config", "access"));
-    const list = docSnap.exists() ? docSnap.data().users || [] : [];
-    document.getElementById('access-list').innerHTML = list.map(id => `<div class="access-item"><span>${id}</span> <button onclick="removeAccess('${id}')">Удалить</button></div>`).join('') + `<div style="margin-top:15px"><input id="newAccId" placeholder="Discord ID"><button class="btn-orange" onclick="addAccess()">Добавить в WhiteList</button></div>`;
+    // Таблица подозреваемых
+    document.getElementById('table-suspects').innerHTML = userDB.suspects.map((s, i) => `
+        <tr><td>${s.name}</td><td>${s.reason}</td><td style="color:${s.verd==='BAN'?'#ef4444':'#10b981'}">${s.verd}</td><td><button onclick="delSuspect(${i})">❌</button></td></tr>
+    `).join('');
 }
 
-async function addAccess() {
-    const id = document.getElementById('newAccId').value; if(!id) return;
-    const docRef = window._fsDoc(db, "config", "access");
-    const docSnap = await window._fsGetDoc(docRef);
-    let users = docSnap.exists() ? docSnap.data().users || [] : [];
-    if(!users.includes(id)) users.push(id);
-    await window._fsSetDoc(docRef, { users }); loadAccessList();
-}
-
-async function removeAccess(id) {
-    const docRef = window._fsDoc(db, "config", "access");
-    const docSnap = await window._fsGetDoc(docRef);
-    let users = docSnap.data().users.filter(u => u !== id);
-    await window._fsSetDoc(docRef, { users }); loadAccessList();
-}
-
-// Тест реакции
-let gStat = 'idle', gTime, gTimer, best = Infinity;
-function handleGameClick() {
-    const a = document.getElementById('reaction-area');
-    if(gStat === 'idle') {
-        gStat = 'wait'; a.innerText = 'Жди зеленого...'; a.className = 'wait';
-        gTimer = setTimeout(() => { gStat = 'ready'; a.innerText = 'ЖМИ!!!'; a.className = 'ready'; gTime = Date.now(); }, 1000 + Math.random()*3000);
-    } else if(gStat === 'wait') {
-        clearTimeout(gTimer); gStat = 'idle'; a.innerText = 'Фальстарт! Еще раз?'; a.className = '';
+// Реакция
+let gState = 'idle', gTime;
+function gameClick() {
+    const area = document.getElementById('reaction-area');
+    if(gState === 'idle') {
+        gState = 'wait'; area.innerText = 'Жди зелёного...'; area.className = 'wait';
+        setTimeout(() => {
+            if(gState !== 'wait') return;
+            gState = 'ready'; area.innerText = 'ЖМИ!!!'; area.className = 'ready';
+            gTime = Date.now();
+        }, 1000 + Math.random() * 3000);
+    } else if(gState === 'wait') {
+        gState = 'idle'; area.innerText = 'Рано! Еще раз?'; area.className = '';
     } else {
-        const res = Date.now() - gTime; gStat = 'idle'; a.innerText = res + ' ms'; a.className = '';
-        document.getElementById('current-result').innerText = 'Результат: ' + res + ' ms';
-        if(res < best) { best = res; document.getElementById('best-score').innerText = 'Лучший: ' + best + ' ms'; }
+        const ms = Date.now() - gTime;
+        gState = 'idle'; area.innerText = 'Кликни для старта'; area.className = '';
+        document.getElementById('game-res').innerText = ms + ' ms';
     }
 }
 
-// Экспорт/Импорт
-function exportData() {
-    const date = new Date().toISOString().split('T')[0];
-    const data = { stats: myStats, suspects: suspects, domains: domains };
-    const blob = new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'});
-    const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
-    a.download = `backup_${date}.json`; a.click();
+// Админка
+async function loadAdminList() {
+    const doc = await db.collection('config').doc('access').get();
+    const list = doc.exists ? doc.data().users || [] : [];
+    document.getElementById('admin-list').innerHTML = list.map(id => `
+        <div style="display:flex; justify-content:space-between; margin-bottom:10px; background:rgba(255,255,255,0.05); padding:10px; border-radius:5px;">
+            <span>${id}</span>
+            <button onclick="removeFromWhitelist('${id}')" style="color:var(--danger); background:none; border:none; cursor:pointer;">Удалить</button>
+        </div>
+    `).join('');
 }
 
-function importData(e) {
-    const reader = new FileReader();
-    reader.onload = async (ev) => {
-        const d = JSON.parse(ev.target.result);
-        if(d.stats) myStats = d.stats; if(d.suspects) suspects = d.suspects; if(d.domains) domains = d.domains;
-        await saveUserDB(); renderStats(); renderSuspects(); alert('Данные импортированы!');
-    };
-    reader.readAsText(e.target.files[0]);
+async function addToWhitelist() {
+    const id = document.getElementById('new-white-id').value;
+    if(!id) return;
+    const docRef = db.collection('config').doc('access');
+    const doc = await docRef.get();
+    let users = doc.exists ? doc.data().users || [] : [];
+    if(!users.includes(id)) users.push(id);
+    await docRef.set({ users });
+    loadAdminList();
 }
 
-checkAuth();
+async function removeFromWhitelist(id) {
+    const docRef = db.collection('config').doc('access');
+    const doc = await docRef.get();
+    let users = (doc.data().users || []).filter(u => u !== id);
+    await docRef.set({ users });
+    loadAdminList();
+}
+
+// Запуск
+init();
 </script>
 </body>
 </html>
