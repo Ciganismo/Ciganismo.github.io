@@ -1,0 +1,779 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel v4 — GTA5 RP</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-deep: #0a0a0b;
+            --bg-card: #141416;
+            --bg-input: #1c1c1f;
+            --accent: #ff8c00;
+            --accent-hover: #ffa533;
+            --text-main: #a1a1aa;
+            --text-bright: #f4f4f5;
+            --border: #27272a;
+            --success: #10b981;
+            --danger: #ef4444;
+            --discord: #5865F2;
+            --discord-hover: #4752c4;
+            --radius: 12px;
+        }
+
+        * { box-sizing: border-box; transition: all 0.2s ease; }
+        body { font-family: 'Inter', sans-serif; background-color: var(--bg-deep); color: var(--text-main); margin: 0; line-height: 1.5; }
+
+        /* ===== LOGIN SCREEN ===== */
+        #login-screen {
+            display: none;
+            position: fixed; inset: 0; z-index: 9999;
+            background: var(--bg-deep);
+            align-items: center; justify-content: center; flex-direction: column;
+        }
+        #login-screen.visible { display: flex; }
+        .login-box {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 50px 60px;
+            text-align: center;
+            max-width: 420px;
+            width: 90%;
+        }
+        .login-logo {
+            width: 60px; height: 60px; border-radius: 14px;
+            background: var(--accent); color: #000;
+            font-size: 28px; font-weight: 900;
+            display: inline-flex; align-items: center; justify-content: center;
+            margin-bottom: 20px;
+        }
+        .login-title { font-size: 22px; font-weight: 700; color: var(--text-bright); margin-bottom: 6px; }
+        .login-sub { font-size: 13px; color: var(--text-main); margin-bottom: 30px; }
+        .btn-discord {
+            display: flex; align-items: center; justify-content: center; gap: 12px;
+            width: 100%; padding: 14px 20px;
+            background: var(--discord); color: #fff;
+            border: none; border-radius: 10px;
+            font-size: 15px; font-weight: 700;
+            cursor: pointer; text-decoration: none;
+        }
+        .btn-discord:hover { background: var(--discord-hover); }
+        .btn-discord svg { width: 22px; height: 22px; }
+        .login-notice {
+            margin-top: 16px; font-size: 11px; color: #52525b;
+        }
+
+        /* ===== DENIED SCREEN ===== */
+        #denied-screen {
+            display: none;
+            position: fixed; inset: 0; z-index: 9999;
+            background: var(--bg-deep);
+            align-items: center; justify-content: center; flex-direction: column;
+            text-align: center;
+        }
+        #denied-screen.visible { display: flex; }
+        .denied-box {
+            background: var(--bg-card);
+            border: 1px solid rgba(239,68,68,0.3);
+            border-radius: 20px;
+            padding: 50px 60px;
+            max-width: 420px;
+            width: 90%;
+        }
+        .denied-icon { font-size: 50px; margin-bottom: 16px; }
+        .denied-title { font-size: 20px; font-weight: 700; color: var(--danger); margin-bottom: 8px; }
+        .denied-sub { font-size: 13px; color: var(--text-main); margin-bottom: 24px; }
+        #denied-user-info { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #52525b; margin-bottom: 20px; }
+        .btn-logout-sm {
+            background: transparent; border: 1px solid var(--border); color: var(--text-main);
+            padding: 10px 20px; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 600;
+        }
+        .btn-logout-sm:hover { border-color: var(--danger); color: var(--danger); }
+
+        /* ===== SETUP BANNER ===== */
+        #setup-banner {
+            display: none;
+            background: rgba(88,101,242,0.12);
+            border: 1px solid rgba(88,101,242,0.4);
+            border-radius: var(--radius);
+            padding: 16px 20px;
+            margin-bottom: 20px;
+            font-size: 13px;
+            color: #a5b4fc;
+        }
+        #setup-banner b { color: #818cf8; }
+        #setup-banner code {
+            background: rgba(88,101,242,0.2);
+            padding: 2px 6px; border-radius: 4px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+        }
+
+        /* ===== HEADER ===== */
+        .admin-header {
+            background-color: rgba(20, 20, 22, 0.8); backdrop-filter: blur(12px);
+            height: 70px; display: flex; align-items: center; padding: 0 40px;
+            border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 100; justify-content: space-between;
+        }
+        .logo-area { display: flex; align-items: center; gap: 12px; font-weight: 700; color: var(--text-bright); font-size: 1.1rem; }
+        .logo-area span { color: var(--accent); }
+        .header-user { display: flex; align-items: center; gap: 12px; }
+        .header-avatar { width: 36px; height: 36px; border-radius: 50%; border: 2px solid var(--accent); object-fit: cover; }
+        .header-avatar-placeholder {
+            width: 36px; height: 36px; border-radius: 50%;
+            background: var(--discord); color: #fff;
+            font-weight: 700; font-size: 15px;
+            display: flex; align-items: center; justify-content: center;
+            border: 2px solid var(--accent);
+        }
+        .btn-logout {
+            background: transparent; border: 1px solid var(--border); color: var(--text-main);
+            padding: 7px 14px; border-radius: 8px; cursor: pointer; font-size: 12px; font-weight: 600;
+        }
+        .btn-logout:hover { border-color: var(--danger); color: var(--danger); }
+
+        /* ===== LAYOUT ===== */
+        .wrapper { max-width: 1600px; margin: 30px auto; padding: 0 40px; display: grid; grid-template-columns: 320px 1fr; gap: 30px; }
+
+        /* ===== NAV ===== */
+        .tab-menu { display: flex; flex-direction: column; gap: 8px; margin-bottom: 25px; }
+        .tab-btn {
+            padding: 14px 18px; border-radius: var(--radius); cursor: pointer; border: 1px solid transparent;
+            background: transparent; color: var(--text-main); text-align: left; font-weight: 600; font-size: 14px;
+        }
+        .tab-btn.active { background: var(--bg-card); border-color: var(--border); color: var(--accent); }
+        .tab-btn.owner-only { position: relative; }
+        .tab-btn.owner-only::after {
+            content: 'OWNER'; font-size: 8px; font-weight: 800;
+            background: rgba(255,140,0,0.2); color: var(--accent);
+            border: 1px solid rgba(255,140,0,0.4);
+            padding: 1px 5px; border-radius: 4px; margin-left: 8px;
+            vertical-align: middle;
+        }
+
+        /* ===== CARDS ===== */
+        .card { background-color: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; margin-bottom: 20px; }
+        .card h3 { font-size: 12px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-bright); margin-top: 0; margin-bottom: 20px; }
+
+        input, select, textarea {
+            width: 100%; background: var(--bg-input); border: 1px solid var(--border);
+            padding: 12px; color: #fff; border-radius: 8px; margin-bottom: 12px; outline: none; font-size: 13px; font-family: inherit;
+        }
+
+        .btn { padding: 12px 20px; border: none; border-radius: 8px; cursor: pointer; font-weight: 700; font-size: 13px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
+        .btn-orange { background: var(--accent); color: #000; width: 100%; }
+        .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text-main); }
+
+        /* ===== ACCESS MANAGER ===== */
+        #section-access .access-list { display: flex; flex-direction: column; gap: 10px; }
+        .access-item {
+            display: flex; align-items: center; justify-content: space-between;
+            background: var(--bg-input); border: 1px solid var(--border);
+            border-radius: 10px; padding: 12px 16px;
+        }
+        .access-item.owner-row { border-color: rgba(255,140,0,0.3); background: rgba(255,140,0,0.05); }
+        .access-item-left { display: flex; align-items: center; gap: 12px; }
+        .access-avatar {
+            width: 36px; height: 36px; border-radius: 50%;
+            background: var(--discord); color: #fff;
+            font-weight: 700; display: flex; align-items: center; justify-content: center; font-size: 14px;
+            flex-shrink: 0;
+        }
+        .access-name { font-weight: 600; color: var(--text-bright); font-size: 14px; }
+        .access-id { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #52525b; }
+        .access-role { font-size: 10px; font-weight: 800; padding: 3px 8px; border-radius: 5px; margin-left: 8px; text-transform: uppercase; }
+        .role-owner { background: rgba(255,140,0,0.2); color: var(--accent); border: 1px solid rgba(255,140,0,0.4); }
+        .role-user { background: rgba(16,185,129,0.15); color: var(--success); border: 1px solid rgba(16,185,129,0.3); }
+        .btn-remove {
+            background: transparent; border: 1px solid var(--border); color: #52525b;
+            padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 11px; font-weight: 700;
+        }
+        .btn-remove:hover { border-color: var(--danger); color: var(--danger); }
+        .access-add { display: grid; grid-template-columns: 1fr auto; gap: 10px; margin-bottom: 0; }
+        .access-add input { margin-bottom: 0; }
+        .btn-add-access { background: var(--accent); color: #000; border: none; border-radius: 8px; padding: 12px 18px; font-weight: 700; font-size: 13px; cursor: pointer; white-space: nowrap; }
+
+        /* ===== TABLES ===== */
+        .table-wrap { overflow-x: auto; border-radius: 8px; border: 1px solid var(--border); }
+        .data-table { width: 100%; border-collapse: collapse; }
+        .data-table th { background: rgba(255,255,255,0.02); text-align: left; padding: 12px 15px; border-bottom: 1px solid var(--border); color: var(--text-bright); font-size: 11px; }
+        .data-table td { padding: 12px 15px; border-bottom: 1px solid var(--border); font-size: 12px; font-family: 'JetBrains Mono', monospace; }
+        .week-row { background: rgba(255, 140, 0, 0.05); color: var(--accent); font-weight: bold; }
+
+        .content-section { display: none; }
+        .content-section.active { display: block; animation: fadeIn 0.3s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; } }
+
+        /* ===== GAME ===== */
+        #reaction-area {
+            width: 100%; height: 300px; border-radius: 12px; display: flex;
+            align-items: center; justify-content: center; cursor: pointer; user-select: none;
+            font-size: 24px; color: #fff; background: var(--bg-input); border: 2px solid var(--border);
+        }
+        #reaction-area.wait { background: #e11d48; }
+        #reaction-area.ready { background: #10b981; }
+        .badge { padding: 4px 8px; border-radius: 6px; font-size: 10px; font-weight: 800; text-transform: uppercase; }
+        .status-none { background: #3f3f46; color: #fff; }
+        .status-ban { background: rgba(239, 68, 68, 0.2); color: var(--danger); border: 1px solid var(--danger); }
+        .status-clear { background: rgba(16, 185, 129, 0.2); color: var(--success); border: 1px solid var(--success); }
+    </style>
+</head>
+<body>
+
+<!-- ===== LOGIN SCREEN ===== -->
+<div id="login-screen">
+    <div class="login-box">
+        <div class="login-logo">A</div>
+        <div class="login-title">ADMIN<span style="color:var(--accent)">PANEL</span></div>
+        <div class="login-sub">GTA5 RP · Войдите через Discord для доступа</div>
+        <a id="discord-login-btn" class="btn-discord" href="#" onclick="startDiscordLogin()">
+            <svg viewBox="0 0 71 55" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M60.1045 4.8978C55.5792 2.8214 50.7265 1.2916 45.6527 0.41542C45.5603 0.39851 45.468 0.44077 45.4204 0.52529C44.7963 1.6353 44.105 3.0834 43.6209 4.2216C38.1637 3.4046 32.7345 3.4046 27.3892 4.2216C26.905 3.0581 26.1886 1.6353 25.5617 0.52529C25.5141 0.44359 25.4218 0.40133 25.3294 0.41542C20.2584 1.2888 15.4057 2.8186 10.8776 4.8978C10.8384 4.9147 10.8048 4.9429 10.7825 4.9795C1.57795 18.7309 -0.943561 32.1443 0.293408 45.3914C0.299005 45.4562 0.335386 45.5182 0.385761 45.5576C6.45866 50.0174 12.3413 52.7249 18.1147 54.5195C18.2071 54.5477 18.305 54.5139 18.3638 54.4378C19.7295 52.5728 20.9469 50.6063 21.9907 48.5383C22.0523 48.4172 21.9935 48.2735 21.8676 48.2256C19.9366 47.4931 18.0979 46.6 16.3292 45.5858C16.1893 45.5041 16.1781 45.304 16.3068 45.2082C16.679 44.9293 17.0513 44.6391 17.4067 44.3461C17.471 44.2926 17.5606 44.2813 17.6362 44.3151C29.2558 49.6202 41.8354 49.6202 53.3179 44.3151C53.3935 44.2785 53.4831 44.2898 53.5502 44.3433C53.9057 44.6363 54.2779 44.9293 54.6529 45.2082C54.7816 45.304 54.7732 45.5041 54.6333 45.5858C52.8646 46.6197 51.0259 47.4931 49.0921 48.2228C48.9662 48.2707 48.9102 48.4172 48.9718 48.5383C50.038 50.6034 51.2554 52.5699 52.5959 54.435C52.6519 54.5139 52.7526 54.5477 52.845 54.5195C58.6464 52.7249 64.529 50.0174 70.6019 45.5576C70.6551 45.5182 70.6887 45.459 70.6943 45.3942C72.1747 30.0791 68.2147 16.7757 60.1968 4.9823C60.1772 4.9429 60.1437 4.9147 60.1045 4.8978ZM23.7259 37.3253C20.2276 37.3253 17.3451 34.1136 17.3451 30.1693C17.3451 26.225 20.1717 23.0133 23.7259 23.0133C27.308 23.0133 30.1626 26.2532 30.1066 30.1693C30.1066 34.1136 27.28 37.3253 23.7259 37.3253ZM47.3178 37.3253C43.8196 37.3253 40.9371 34.1136 40.9371 30.1693C40.9371 26.225 43.7636 23.0133 47.3178 23.0133C50.9 23.0133 53.7545 26.2532 53.6986 30.1693C53.6986 34.1136 50.9 37.3253 47.3178 37.3253Z" fill="currentColor"/>
+            </svg>
+            Войти через Discord
+        </a>
+        <div class="login-notice">Доступ только для разрешённых пользователей</div>
+    </div>
+</div>
+
+<!-- ===== DENIED SCREEN ===== -->
+<div id="denied-screen">
+    <div class="denied-box">
+        <div class="denied-icon">🚫</div>
+        <div class="denied-title">Доступ запрещён</div>
+        <div class="denied-sub">Вашего Discord аккаунта нет в белом списке.<br>Обратитесь к администратору панели.</div>
+        <div id="denied-user-info"></div>
+        <button class="btn-logout-sm" onclick="logout()">← Выйти из Discord</button>
+    </div>
+</div>
+
+<!-- ===== MAIN APP ===== -->
+<div id="app" style="display:none">
+
+<header class="admin-header">
+    <div class="logo-area">
+        <div style="background: var(--accent); width: 35px; height: 35px; border-radius: 10px; display: flex; align-items: center; justify-content: center; color: #000; font-size: 20px;">A</div>
+        ADMIN<span>PANEL</span>
+    </div>
+    <div class="header-user">
+        <div id="header-avatar-wrap"></div>
+        <div style="text-align: right;">
+            <div id="header-username" style="font-weight: 700; color: var(--text-bright);"></div>
+            <div id="header-discordtag" style="color: var(--accent); font-size: 11px; font-family: 'JetBrains Mono';"></div>
+        </div>
+        <button class="btn-logout" onclick="logout()">Выйти</button>
+    </div>
+</header>
+
+<div class="wrapper">
+    <aside>
+        <nav class="tab-menu">
+            <button class="tab-btn active" onclick="switchTab('analyzer')">🔍 Анализатор</button>
+            <button class="tab-btn" onclick="switchTab('reports')">📊 Статистика</button>
+            <button class="tab-btn" onclick="switchTab('suspects')">⚖️ Проверки</button>
+            <button class="tab-btn" onclick="switchTab('game')">⚡ Реакция</button>
+            <button class="tab-btn owner-only" id="access-tab-btn" onclick="switchTab('access')" style="display:none">🔐 Доступы</button>
+        </nav>
+
+        <div id="side-analyzer" class="card side-panel">
+            <h3>Фильтр сайтов</h3>
+            <input type="text" id="domainInput" placeholder="Добавить домен...">
+            <button class="btn btn-orange" onclick="addDomain()">Добавить</button>
+        </div>
+
+        <div id="side-reports" class="card side-panel" style="display:none">
+            <h3>Новый отчет</h3>
+            <input type="date" id="reportDate">
+            <input type="number" id="reportHours" step="0.1" placeholder="Часы">
+            <input type="number" id="reportCount" placeholder="Репорты">
+            <button class="btn btn-orange" onclick="addReport()">Сохранить</button>
+        </div>
+
+        <div id="side-suspects" class="card side-panel" style="display:none">
+            <h3>Подозреваемый</h3>
+            <input type="text" id="susName" placeholder="Имя_Фамилия #Паспорт">
+            <input type="text" id="susLogin" placeholder="Логин / Social ID">
+            <textarea id="susReason" placeholder="Подозрение..." rows="2"></textarea>
+            <textarea id="susEvidence" placeholder="Доказательства" rows="2"></textarea>
+            <button class="btn btn-orange" onclick="addSuspect()">Внести в базу</button>
+        </div>
+
+        <div id="side-game" class="card side-panel" style="display:none">
+            <h3>Статистика</h3>
+            <div style="font-size: 13px;">Кликни на поле справа, чтобы начать тест реакции</div>
+        </div>
+
+        <div id="side-access" class="card side-panel" style="display:none">
+            <h3>Добавить доступ</h3>
+            <div class="access-add">
+                <input type="text" id="newAccessId" placeholder="Discord ID (числа)" style="margin-bottom:0">
+                <button class="btn-add-access" onclick="addAccessById()">+</button>
+            </div>
+            <div style="margin-top:10px; font-size:11px; color:#52525b; line-height:1.6">
+                Discord ID — 17-19 цифр.<br>
+                Узнать: Discord → Настройки → Расширенные → Режим разработчика → ПКМ по юзеру → "Копировать ID"
+            </div>
+        </div>
+
+        <div class="card">
+            <button class="btn btn-outline" style="width:100%; margin-bottom:10px" onclick="exportData()">💾 Экспорт (JSON)</button>
+            <button class="btn btn-outline" style="width:100%" onclick="document.getElementById('importFile').click()">📂 Импорт</button>
+            <input type="file" id="importFile" style="display:none" onchange="importData(event)">
+        </div>
+    </aside>
+
+    <main>
+        <!-- SETUP BANNER -->
+        <div id="setup-banner">
+            ⚙️ <b>Настройка Discord OAuth2:</b> Замените <code>YOUR_CLIENT_ID</code> в начале скрипта на ID вашего Discord приложения, и укажите <code>REDIRECT_URI</code>. Создать приложение: <a href="https://discord.com/developers/applications" target="_blank" style="color:#818cf8">discord.com/developers/applications</a>
+        </div>
+
+        <section id="section-analyzer" class="content-section active">
+            <div class="card" style="border: 2px dashed var(--border); text-align:center; padding:40px; cursor:pointer;" onclick="document.getElementById('fileInput').click()">
+                <b>Загрузить лог-файл (.txt)</b>
+                <input type="file" id="fileInput" accept=".txt" style="display: none;">
+            </div>
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px;">
+                <div class="card" style="padding:0">
+                    <div style="padding:15px; border-bottom:1px solid var(--border);">САЙТЫ (<span id="urlCount">0</span>)</div>
+                    <div style="max-height:450px; overflow-y:auto;"><table class="data-table"><tbody id="urlList"></tbody></table></div>
+                </div>
+                <div class="card" style="padding:0">
+                    <div style="padding:15px; border-bottom:1px solid var(--border);">ПОЧТЫ (<span id="emailCount">0</span>)</div>
+                    <div style="max-height:450px; overflow-y:auto;"><table class="data-table"><tbody id="emailList"></tbody></table></div>
+                </div>
+            </div>
+        </section>
+
+        <section id="section-reports" class="content-section">
+            <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:20px; margin-bottom:20px;">
+                <div class="card" style="text-align:center"><b>ЧАСЫ</b><div id="totalHours" style="font-size:24px; color:var(--accent)">0</div></div>
+                <div class="card" style="text-align:center"><b>РЕПОРТЫ</b><div id="totalReports" style="font-size:24px; color:var(--accent)">0</div></div>
+                <div class="card" style="text-align:center"><b>Р/Ч</b><div id="avgReports" style="font-size:24px; color:var(--accent)">0</div></div>
+            </div>
+            <div class="card" style="padding:0">
+                <div style="padding:15px; border-bottom:1px solid var(--border);"><b>НЕДЕЛЬНЫЕ ИТОГИ (ВС - СБ)</b></div>
+                <table class="data-table">
+                    <thead><tr><th>Период</th><th>Часы</th><th>Репорты</th><th>Р/Ч</th></tr></thead>
+                    <tbody id="weekTableBody"></tbody>
+                </table>
+            </div>
+            <div class="card" style="padding:0; margin-top:20px">
+                <div style="padding:15px; border-bottom:1px solid var(--border);"><b>ДЕТАЛИЗАЦИЯ ПО ДНЯМ</b></div>
+                <table class="data-table"><tbody id="dayTableBody"></tbody></table>
+            </div>
+        </section>
+
+        <section id="section-suspects" class="content-section">
+            <div class="card" style="padding:0">
+                <div class="table-wrap">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Дата</th><th>Имя/Паспорт</th><th>Данные</th><th>Подозрение</th><th>Статус</th><th>Упр.</th>
+                            </tr>
+                        </thead>
+                        <tbody id="suspectTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <section id="section-game" class="content-section">
+            <div class="card" style="text-align:center">
+                <h3>Проверка реакции</h3>
+                <div id="reaction-area" onclick="handleGameClick()">Нажми Старт</div>
+                <div style="margin-top:20px">
+                    <span id="current-result">Результат: --</span> |
+                    <span id="best-score" style="color:var(--accent)">Лучший: --</span>
+                </div>
+            </div>
+        </section>
+
+        <section id="section-access" class="content-section">
+            <div class="card">
+                <h3>🔐 Управление доступами</h3>
+                <div id="access-list" class="access-list"></div>
+            </div>
+        </section>
+    </main>
+</div>
+
+</div><!-- end #app -->
+
+<script>
+// ============================================================
+//  ⚙️  НАСТРОЙКА — ИЗМЕНИТЬ ЭТИ ЗНАЧЕНИЯ
+// ============================================================
+const DISCORD_CLIENT_ID   = 'YOUR_CLIENT_ID';       // ID приложения из Discord Developer Portal
+const REDIRECT_URI        = window.location.href.split('?')[0].split('#')[0]; // Текущий URL (или задайте явно)
+const OWNER_DISCORD_ID    = 'YOUR_DISCORD_ID';      // Ваш Discord ID (17-19 цифр) — всегда имеет доступ
+// ============================================================
+
+const DISCORD_SCOPE = 'identify';
+
+// ===== ACCESS LIST =====
+// Хранится в localStorage. Ключ: 'accessList' — массив объектов { id, note }
+function getAccessList() {
+    try { return JSON.parse(localStorage.getItem('accessList') || '[]'); } catch { return []; }
+}
+function saveAccessList(list) {
+    localStorage.setItem('accessList', JSON.stringify(list));
+}
+function hasAccess(discordId) {
+    if (!discordId) return false;
+    if (discordId === OWNER_DISCORD_ID) return true;
+    return getAccessList().some(u => u.id === discordId);
+}
+
+// ===== DISCORD OAUTH2 =====
+function startDiscordLogin() {
+    if (DISCORD_CLIENT_ID === 'YOUR_CLIENT_ID') {
+        // Режим разработки без настройки — войти как owner (только для теста)
+        const fakeUser = { id: OWNER_DISCORD_ID, username: 'Barack Cheremsha', discriminator: '0', global_name: 'ciganismo', avatar: null };
+        sessionStorage.setItem('discord_user', JSON.stringify(fakeUser));
+        checkAuth();
+        return;
+    }
+    const params = new URLSearchParams({
+        client_id: DISCORD_CLIENT_ID,
+        redirect_uri: REDIRECT_URI,
+        response_type: 'token',
+        scope: DISCORD_SCOPE,
+    });
+    window.location.href = `https://discord.com/api/oauth2/authorize?${params}`;
+}
+
+async function fetchDiscordUser(token) {
+    const res = await fetch('https://discord.com/api/v10/users/@me', {
+        headers: { Authorization: `Bearer ${token}` }
+    });
+    if (!res.ok) throw new Error('Discord API error');
+    return res.json();
+}
+
+function logout() {
+    sessionStorage.removeItem('discord_user');
+    sessionStorage.removeItem('discord_token');
+    document.getElementById('app').style.display = 'none';
+    document.getElementById('denied-screen').classList.remove('visible');
+    document.getElementById('login-screen').classList.add('visible');
+}
+
+async function checkAuth() {
+    // 1. Проверяем hash (redirect от Discord)
+    const hash = window.location.hash.substring(1);
+    if (hash) {
+        const params = new URLSearchParams(hash);
+        const token = params.get('access_token');
+        if (token) {
+            history.replaceState(null, '', window.location.pathname);
+            sessionStorage.setItem('discord_token', token);
+            try {
+                const user = await fetchDiscordUser(token);
+                sessionStorage.setItem('discord_user', JSON.stringify(user));
+            } catch(e) {
+                showLogin();
+                return;
+            }
+        }
+    }
+
+    // 2. Проверяем сохранённого пользователя
+    const userJson = sessionStorage.getItem('discord_user');
+    if (!userJson) { showLogin(); return; }
+
+    let user;
+    try { user = JSON.parse(userJson); } catch { showLogin(); return; }
+
+    // 3. Проверяем доступ
+    if (!hasAccess(user.id)) {
+        showDenied(user);
+        return;
+    }
+
+    showApp(user);
+}
+
+function showLogin() {
+    document.getElementById('login-screen').classList.add('visible');
+    document.getElementById('denied-screen').classList.remove('visible');
+    document.getElementById('app').style.display = 'none';
+    // Показываем баннер настройки если CLIENT_ID не задан
+    if (DISCORD_CLIENT_ID === 'YOUR_CLIENT_ID') {
+        document.getElementById('setup-banner').style.display = 'block';
+    }
+}
+
+function showDenied(user) {
+    document.getElementById('login-screen').classList.remove('visible');
+    document.getElementById('denied-screen').classList.add('visible');
+    document.getElementById('app').style.display = 'none';
+    const tag = user.discriminator && user.discriminator !== '0' ? `#${user.discriminator}` : '';
+    document.getElementById('denied-user-info').textContent = `@${user.username}${tag} · ID: ${user.id}`;
+}
+
+function showApp(user) {
+    document.getElementById('login-screen').classList.remove('visible');
+    document.getElementById('denied-screen').classList.remove('visible');
+    document.getElementById('app').style.display = 'block';
+
+    if (DISCORD_CLIENT_ID === 'YOUR_CLIENT_ID') {
+        document.getElementById('setup-banner').style.display = 'block';
+    }
+
+    // Header
+    const tag = user.discriminator && user.discriminator !== '0' ? `#${user.discriminator}` : '';
+    document.getElementById('header-username').textContent = user.global_name || user.username;
+    document.getElementById('header-discordtag').textContent = `@${user.username}${tag}`;
+
+    const avatarWrap = document.getElementById('header-avatar-wrap');
+    if (user.avatar) {
+        avatarWrap.innerHTML = `<img class="header-avatar" src="https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png?size=64" alt="">`;
+    } else {
+        avatarWrap.innerHTML = `<div class="header-avatar-placeholder">${(user.username||'?')[0].toUpperCase()}</div>`;
+    }
+
+    // Owner features
+    const isOwner = user.id === OWNER_DISCORD_ID;
+    if (isOwner) {
+        document.getElementById('access-tab-btn').style.display = 'block';
+    }
+
+    initApp();
+}
+
+// ===== ACCESS MANAGER UI =====
+function renderAccessList() {
+    const list = getAccessList();
+    const userJson = sessionStorage.getItem('discord_user');
+    const me = userJson ? JSON.parse(userJson) : null;
+    const container = document.getElementById('access-list');
+    if (!container) return;
+
+    let html = '';
+
+    // Owner row
+    html += `
+    <div class="access-item owner-row">
+        <div class="access-item-left">
+            <div class="access-avatar">👑</div>
+            <div>
+                <div class="access-name">Владелец <span class="access-role role-owner">OWNER</span></div>
+                <div class="access-id">${OWNER_DISCORD_ID === 'YOUR_DISCORD_ID' ? 'Не настроено' : OWNER_DISCORD_ID}</div>
+            </div>
+        </div>
+    </div>`;
+
+    // Users
+    if (list.length === 0) {
+        html += `<div style="text-align:center; padding:20px; color:#52525b; font-size:13px">Список пуст — добавьте Discord ID пользователей</div>`;
+    } else {
+        list.forEach(u => {
+            const isSelf = me && u.id === me.id;
+            html += `
+            <div class="access-item">
+                <div class="access-item-left">
+                    <div class="access-avatar">${(u.note||u.id)[0].toUpperCase()}</div>
+                    <div>
+                        <div class="access-name">${u.note || 'Пользователь'} <span class="access-role role-user">USER</span></div>
+                        <div class="access-id">${u.id}</div>
+                    </div>
+                </div>
+                ${!isSelf ? `<button class="btn-remove" onclick="removeAccess('${u.id}')">Удалить</button>` : ''}
+            </div>`;
+        });
+    }
+
+    container.innerHTML = html;
+}
+
+function addAccessById() {
+    const input = document.getElementById('newAccessId');
+    const id = input.value.trim();
+    if (!/^\d{17,20}$/.test(id)) { alert('Discord ID должен содержать 17-19 цифр'); return; }
+    if (id === OWNER_DISCORD_ID) { alert('Это ваш собственный ID (владелец)'); return; }
+    const list = getAccessList();
+    if (list.some(u => u.id === id)) { alert('Этот пользователь уже в списке'); return; }
+    const note = prompt('Имя/заметка для этого пользователя (необязательно):') || '';
+    list.push({ id, note });
+    saveAccessList(list);
+    input.value = '';
+    renderAccessList();
+}
+
+function removeAccess(id) {
+    if (!confirm('Удалить этого пользователя из белого списка?')) return;
+    const list = getAccessList().filter(u => u.id !== id);
+    saveAccessList(list);
+    renderAccessList();
+}
+
+// ===== MAIN APP INIT =====
+function initApp() {
+    saveAndRender();
+    renderSuspects();
+    document.getElementById('reportDate').valueAsDate = new Date();
+}
+
+// ===== TAB SWITCHING =====
+function switchTab(tab) {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.content-section').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('.side-panel').forEach(p => p.style.display = 'none');
+    document.querySelector(`[onclick="switchTab('${tab}')"]`).classList.add('active');
+    document.getElementById(`section-${tab}`).classList.add('active');
+    const sideEl = document.getElementById(`side-${tab}`);
+    if (sideEl) sideEl.style.display = 'block';
+    if (tab === 'access') renderAccessList();
+}
+
+// ===== ANALYZER =====
+const DEFAULT_DOMAINS = ['0xcheats.net','binware.su','hydrogen.ac','binvnce.su','unicore.cloud','midnight.im','fatality.win','neverlose.cc','skript.gg'];
+const DEFAULT_PROVIDERS = ['gmail.com','mail.ru','yandex.ru','outlook.com','icloud.com','rambler.ru','proton.me'];
+let targetDomains = new Set([...DEFAULT_DOMAINS]);
+let validProviders = new Set([...DEFAULT_PROVIDERS]);
+let myStats = JSON.parse(localStorage.getItem('adminStats') || '[]');
+let suspects = JSON.parse(localStorage.getItem('suspectsDB') || '[]');
+let fileContent = '';
+
+document.getElementById('fileInput').addEventListener('change', function(e) {
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+        fileContent = ev.target.result;
+        const emails = [...new Set(fileContent.match(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g) || [])]
+            .filter(e => validProviders.has(e.split('@')[1]?.toLowerCase()));
+        const urls = [...new Set(fileContent.match(/https?:\/\/[^\s"'<>|]+/g) || [])]
+            .filter(u => Array.from(targetDomains).some(d => u.toLowerCase().includes(d)));
+        document.getElementById('emailList').innerHTML = emails.map(e => `<tr><td>${e}</td></tr>`).join('');
+        document.getElementById('urlList').innerHTML = urls.map(u => `<tr><td>${u}</td></tr>`).join('');
+        document.getElementById('emailCount').innerText = emails.length;
+        document.getElementById('urlCount').innerText = urls.length;
+    };
+    reader.readAsText(e.target.files[0]);
+});
+
+function addDomain() {
+    const val = prompt("Введите домен (например, cheatsite.com):");
+    if(val) { targetDomains.add(val.toLowerCase()); alert("Добавлено!"); }
+}
+
+// ===== REPORTS =====
+function getSunday(d) {
+    const date = new Date(d);
+    date.setDate(date.getDate() - date.getDay());
+    return date;
+}
+
+function addReport() {
+    const date = document.getElementById('reportDate').value;
+    const hours = parseFloat(document.getElementById('reportHours').value);
+    const count = parseInt(document.getElementById('reportCount').value) || 0;
+    if(!date || isNaN(hours)) return alert("Заполните поля!");
+    myStats.push({ date, hours, count, id: Date.now() });
+    saveAndRender();
+}
+
+function saveAndRender() {
+    localStorage.setItem('adminStats', JSON.stringify(myStats));
+    const dayTable = document.getElementById('dayTableBody');
+    const weekTable = document.getElementById('weekTableBody');
+    if (!dayTable) return;
+    dayTable.innerHTML = ''; weekTable.innerHTML = '';
+    let totalH = 0, totalC = 0;
+    const weeks = {};
+    myStats.sort((a,b) => new Date(b.date) - new Date(a.date)).forEach(s => {
+        totalH += s.hours; totalC += s.count;
+        dayTable.innerHTML += `<tr><td>${s.date}</td><td>${s.hours}ч</td><td>${s.count}р</td><td><button onclick="delStat(${s.id})" style="color:var(--danger); border:none; background:none; cursor:pointer">✕</button></td></tr>`;
+        const sun = getSunday(s.date).toISOString().split('T')[0];
+        if(!weeks[sun]) weeks[sun] = { h: 0, c: 0, start: getSunday(s.date) };
+        weeks[sun].h += s.hours; weeks[sun].c += s.count;
+    });
+    Object.keys(weeks).sort().reverse().forEach(key => {
+        const w = weeks[key];
+        const end = new Date(w.start); end.setDate(end.getDate() + 6);
+        weekTable.innerHTML += `<tr class="week-row"><td>${w.start.toLocaleDateString()} - ${end.toLocaleDateString()}</td><td>${w.h.toFixed(1)}ч</td><td>${w.c}шт</td><td>${w.h>0 ? (w.c/w.h).toFixed(1) : 0}</td></tr>`;
+    });
+    document.getElementById('totalHours').innerText = totalH.toFixed(1);
+    document.getElementById('totalReports').innerText = totalC;
+    document.getElementById('avgReports').innerText = totalH > 0 ? (totalC/totalH).toFixed(1) : 0;
+}
+
+function delStat(id) { myStats = myStats.filter(s => s.id !== id); saveAndRender(); }
+
+// ===== SUSPECTS =====
+function addSuspect() {
+    const name = document.getElementById('susName').value;
+    const login = document.getElementById('susLogin').value;
+    const reason = document.getElementById('susReason').value;
+    const evidence = document.getElementById('susEvidence').value;
+    if(!name) return alert("Введите имя!");
+    suspects.push({ id: Date.now(), date: new Date().toLocaleDateString(), name, login, reason, evidence, status: 'none', bReason: '', bTerm: '', bDate: '' });
+    renderSuspects();
+    ['susName','susLogin','susReason','susEvidence'].forEach(id => document.getElementById(id).value = '');
+}
+
+function setSusStatus(id, st) {
+    const s = suspects.find(x => x.id === id);
+    s.status = st;
+    if(st === 'ban') { s.bReason = prompt("Причина бана:"); s.bTerm = prompt("Срок:"); s.bDate = new Date().toLocaleDateString(); }
+    renderSuspects();
+}
+
+function renderSuspects() {
+    localStorage.setItem('suspectsDB', JSON.stringify(suspects));
+    const el = document.getElementById('suspectTableBody');
+    if (!el) return;
+    el.innerHTML = suspects.sort((a,b) => b.id - a.id).map(s => {
+        let st = `<span class="badge status-none">В работе</span>`;
+        if(s.status === 'clear') st = `<span class="badge status-clear">Чист</span>`;
+        if(s.status === 'ban') st = `<span class="badge status-ban">Бан</span><div style="font-size:9px; color:var(--danger); margin-top:3px">${s.bReason} (${s.bTerm})</div>`;
+        return `<tr><td>${s.date}</td><td><b>${s.name}</b></td><td>${s.login}</td><td><small>${s.reason}</small></td><td>${st}</td><td><select onchange="setSusStatus(${s.id}, this.value)"><option value="">Статус</option><option value="clear">Чист</option><option value="ban">Бан</option></select><button onclick="delSus(${s.id})" style="border:none; background:none; color:var(--danger); cursor:pointer">✕</button></td></tr>`;
+    }).join('');
+}
+
+function delSus(id) { suspects = suspects.filter(x => x.id !== id); renderSuspects(); }
+
+// ===== GAME =====
+let gStat = 'idle', gTime, gTimer, best = Infinity;
+function handleGameClick() {
+    const a = document.getElementById('reaction-area');
+    if(gStat === 'idle') {
+        gStat = 'wait'; a.innerText = 'Жди...'; a.className = 'wait';
+        gTimer = setTimeout(() => { gStat = 'ready'; a.innerText = 'КЛИКАЙ!'; a.className = 'ready'; gTime = Date.now(); }, Math.random()*3000 + 2000);
+    } else if(gStat === 'wait') {
+        clearTimeout(gTimer); gStat = 'idle'; a.innerText = 'Фальстарт! Еще раз?'; a.className = '';
+    } else {
+        const res = Date.now() - gTime; gStat = 'idle'; a.innerText = res + ' ms'; a.className = '';
+        document.getElementById('current-result').innerText = 'Результат: ' + res + ' ms';
+        if(res < best) { best = res; document.getElementById('best-score').innerText = 'Лучший: ' + best + ' ms'; }
+    }
+}
+
+// ===== EXPORT / IMPORT =====
+function exportData() {
+    const data = { stats: myStats, suspects: suspects };
+    const blob = new Blob([JSON.stringify(data)], {type: 'application/json'});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `backup_admin.json`;
+    a.click();
+}
+
+function importData(e) {
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+        const d = JSON.parse(ev.target.result);
+        if(d.stats) myStats = d.stats; if(d.suspects) suspects = d.suspects;
+        saveAndRender(); renderSuspects(); alert("Готово!");
+    };
+    reader.readAsText(e.target.files[0]);
+}
+
+// ===== BOOT =====
+checkAuth();
+</script>
+</body>
+</html>
