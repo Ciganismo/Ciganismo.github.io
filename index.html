@@ -242,11 +242,7 @@ const CONFIG = {
     // в Discord Developer Portal → OAuth2 → Redirects
     // Формат для GitHub Pages: https://ВАШ_ЮЗЕР.github.io/ВАШ_РЕПО/
     // Если сайт в корне: https://ВАШ_ЮЗЕР.github.io/
-    get redirectUri() {
-        // Авто-определение для GitHub Pages — берём origin + pathname без файла
-        const path = window.location.pathname.replace(/\/[^/]*$/, '/');
-        return window.location.origin + path;
-    },
+    redirectUri: 'https://ciganismo.github.io/',
 
     firebase: {
         apiKey: "AIzaSyB6f9Kd2Rk6ccKEy661QTH9QQfuGEZnqqo",
